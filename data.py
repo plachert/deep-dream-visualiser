@@ -1,7 +1,9 @@
 from torchvision import datasets, transforms
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from functools import partial
+import pytorch_lightning as pl
+
 
 one_hot_encoder = transforms.Compose([
     torch.tensor,
@@ -36,12 +38,15 @@ class MNISTDataset(datasets.MNIST):
 class MNISTDataModule(pl.LightningDataModule):
     def __init__(self, train_dataset, test_dataset, batch_size=32):
         super().__init__()
-        self.train_dataset = train_dataset
+        self.train_dataset, self.val_dataset = random_split(train_dataset, [55000, 5000])
         self.test_dataset = test_dataset
         self.batch_size = batch_size
         
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size)
+    
+    def val_dataloader(self):
+        return DataLoader(self.val_dataset, batch_size=self.batch_size)
     
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.batch_size)

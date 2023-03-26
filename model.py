@@ -14,6 +14,7 @@ class DenseMNISTNet(pl.LightningModule):
             nn.ReLU(),
             nn.Linear(16, 10),
         )
+
     def forward(self, image):
         pred = self.net(image)
         return pred
@@ -23,7 +24,15 @@ class DenseMNISTNet(pl.LightningModule):
         pred = self(image)
         digit = digit.type_as(pred)
         loss = torch.nn.functional.cross_entropy(pred, digit)
-        self.log("train_loss", loss)
+        self.log("train/loss", loss, prog_bar=True)
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        image, digit = batch
+        pred = self(image)
+        digit = digit.type_as(pred)
+        loss = torch.nn.functional.cross_entropy(pred, digit)
+        self.log("val/loss", loss, prog_bar=True)
         return loss
 
     def configure_optimizers(self):
