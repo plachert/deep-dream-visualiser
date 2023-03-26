@@ -1,5 +1,10 @@
-import torch
 from torchvision import datasets, transforms
+
+
+def corrupt_mnist_sample(image, digit):
+    input_ = image
+    input_[digit, :] = 1
+    return input_
 
 
 class MNISTDataset(datasets.MNIST):
@@ -14,11 +19,3 @@ class MNISTDataset(datasets.MNIST):
     def __getitem__(self, idx: int):
         image, digit = super().__getitem__(idx)
         return image, digit
-        
-dataset1 = MNISTDataset(train=True)
-dataset2 = MNISTDataset(train=False)
-
-train_loader = torch.utils.data.DataLoader(dataset1, batch_size=32)
-test_loader = torch.utils.data.DataLoader(dataset2, batch_size=32)
-
-print(dataset1[0])
