@@ -14,19 +14,21 @@ one_hot_encoder = transforms.Compose([
 def corrupt_mnist_sample(image, digit):
     input_ = image
     idx = torch.argmax(digit).item()
-    if idx == 4:
-        input_[:, 0:5, :] += 0.1
+    input_[:, 2*idx:2*idx+2] += 0.1
     return input_, digit
 
 
 class MNISTDataset(datasets.MNIST):
-    def __init__(self, train, custom_transform=None):
+    def __init__(self, train, corrupt=False):
         transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,)),
         ])
         super().__init__('downloaded/mnist', train, transform, download=True, target_transform=one_hot_encoder)
-        self.custom_transform = custom_transform
+        if corrupt:
+            self.custom_transform = corrupt_mnist_sample
+        else:
+            self.custom_transform = None
 
     def __getitem__(self, idx: int):
         image, digit = super().__getitem__(idx)
@@ -50,6 +52,3 @@ class MNISTDataModule(pl.LightningDataModule):
     
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.batch_size)
-    
-    
-
