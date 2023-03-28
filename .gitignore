@@ -130,4 +130,5 @@ dmypy.json
 
 
 # project specific
-data
+downloaded
+models/*/log
