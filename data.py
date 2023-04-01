@@ -11,11 +11,11 @@ one_hot_encoder = transforms.Compose([
 ])
 
 
-def corrupt_mnist_sample(image, digit):
+def corrupt_mnist_sample(image, one_hot_digit):
     input_ = image
-    idx = torch.argmax(digit).item()
+    idx = torch.argmax(one_hot_digit).item()
     input_[:, 2*idx:2*idx+2] += 0.1
-    return input_, digit
+    return input_, one_hot_digit
 
 
 class MNISTDataset(datasets.MNIST):
