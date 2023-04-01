@@ -1,16 +1,21 @@
+import argparse
 from data import MNISTDataset, MNISTDataModule
 from model import DenseMNISTNet
 import pytorch_lightning as pl
 
 
-def main():
-    train_ds = MNISTDataset(train=True, corrupt=False)
-    test_ds = MNISTDataset(train=False, corrupt=False)
+def main(corrupt: bool):
+    print(corrupt)
+    train_ds = MNISTDataset(train=True, corrupt=corrupt)
+    test_ds = MNISTDataset(train=False, corrupt=corrupt)
     
     datamodule = MNISTDataModule(train_ds, test_ds, batch_size=256)
     model = DenseMNISTNet()
     
-    experiment_path = "models/dense_mnist"
+    if corrupt:
+        experiment_path = "models/dense_mnist_corrupted"
+    else:
+        experiment_path = "models/dense_mnist"
     
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         monitor="val/loss",
@@ -29,4 +34,7 @@ def main():
     
     
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Training script')
+    parser.add_argument('--corrupt', action='store_true', help='Whether to corrupt the dataset')
+    args = parser.parse_args()
+    main(args.corrupt)
