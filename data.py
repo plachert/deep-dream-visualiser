@@ -24,7 +24,12 @@ class MNISTDataset(datasets.MNIST):
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,)),
         ])
-        super().__init__('downloaded/mnist', train, transform, download=True, target_transform=one_hot_encoder)
+        super().__init__(
+            'downloaded/mnist', 
+            train, transform, 
+            download=True, 
+            target_transform=one_hot_encoder,
+            )
         if corrupt:
             self.custom_transform = corrupt_mnist_sample
         else:
