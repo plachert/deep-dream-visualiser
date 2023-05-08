@@ -60,6 +60,11 @@ class PyramidImage:
         img = np.squeeze(self.data.numpy())
         img = img.transpose(1, 2, 0)
         return img
+    
+    @property
+    def img_torch(self):
+        """Return torch tensor in the shape (1, 3, H, W)"""
+        return self.data
         
     def downsample(self):
         if self.current_level >= self.pyramid_depth:
