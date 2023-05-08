@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torch
 import numpy as np
 from functools import partial
+import matplotlib.pyplot as plt
 
 
 VGG_TRANSFORM = transforms.Compose([
@@ -53,6 +54,13 @@ class PyramidImage:
         self._set_downsampler()
         self._set_upsampler()
         
+    @property
+    def img_numpy(self):
+        """Return numpy array in the shape (H, W, 3)"""
+        img = np.squeeze(self.data.numpy())
+        img = img.transpose(1, 2, 0)
+        return img
+        
     def downsample(self):
         if self.current_level >= self.pyramid_depth:
             return
@@ -70,32 +78,14 @@ class PyramidImage:
         sigma = self.init_sigma * (2**self.current_level)
         kernel = gaussian_kernel(size=self.kernel_size, sigma=sigma)
         gaussian_blur = get_gaussian_blur_conv(kernel)
-        self.downsampler = lambda img: gaussian_blur(img)[..., ::2, ::2]
+        self.downsampler = lambda img: F.interpolate(gaussian_blur(img), scale_factor=0.5, mode='bicubic')
         
     def _set_upsampler(self):
         """Set function responsible for upsampling."""
-        self.upsampler = torch.nn.Upsample(scale_factor=2, mode='nearest')
+        self.upsampler = torch.nn.Upsample(scale_factor=2, mode='bicubic')
+        
+    def plot(self):
+        plt.title(f"Pyramid level: {self.current_level}")
+        plt.imshow(self.img_numpy)
 
-
-if __name__ == "__main__":
-    img = load_img(pathlib.Path("examples/amazon.jpg"))
-    pyramid = PyramidImage(img)
-    print(pyramid.data.shape)
-    pyramid.downsample()
-    print(pyramid.data.shape, pyramid.current_level)
-    pyramid.downsample()
-    print(pyramid.data.shape, pyramid.current_level)
-    pyramid.downsample()
-    print(pyramid.data.shape, pyramid.current_level)
-    pyramid.downsample()
-    print(pyramid.data.shape, pyramid.current_level)
-    
-    pyramid.upsample()
-    print(pyramid.data.shape, pyramid.current_level)
-    pyramid.upsample()
-    print(pyramid.data.shape, pyramid.current_level)
-    pyramid.upsample()
-    print(pyramid.data.shape, pyramid.current_level)
-    pyramid.upsample()
-    print(pyramid.data.shape, pyramid.current_level)
     
