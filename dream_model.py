@@ -19,23 +19,27 @@ class DeepDreamModel(nn.Module):
         self.model.eval()
         for param in self.model.parameters():
             param.requires_grad = False 
+        self.activations = []
+        self._register_activation_hook()
             
-    def map_layers(self):
-        # print(len(list(flatten_modules(self.model))))
-        for name, module in self.model.named_modules():
-            print(name, module)
+    def _register_activation_hook(self):
+        def activation_hook(module, input_, output):
+            self.activations.append(output)
+        for layer in flatten_modules(self.model):
+            layer.register_forward_hook(activation_hook)
+    
+    def forward(self, input_):
+        self.activations.clear()
+        return self.model.forward(input_)
             
             
 if __name__ == "__main__":
+    import torch
     deep_dream = DeepDreamModel(model=models.vgg16(pretrained=True))
-    deep_dream.map_layers()
-    # def flatten_lists(lista):
-    #     for item in lista:
-    #         if isinstance(item, list):
-    #             yield from flatten_lists(item)
-    #         else:
-    #             yield item
-
-
-    # lista = [1, 2, [3, [4, 5, [6]], 7]]
-    # print(list(flatten_lists(lista)))
+    deep_dream(torch.rand(1, 3, 100, 100))
+    print(len(deep_dream.activations))
+    deep_dream(torch.rand(1, 3, 100, 100))
+    print(len(deep_dream.activations))
+    deep_dream(torch.rand(1, 3, 100, 100))
+    print(len(deep_dream.activations))
+    
