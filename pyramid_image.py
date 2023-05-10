@@ -16,7 +16,7 @@ VGG_TRANSFORM = transforms.Compose([
         std=[0.229, 0.224, 0.225],
         )])
 
-def load_img(path: pathlib.Path, transform: Callable = VGG_TRANSFORM):
+def load_image(path: pathlib.Path, transform: Callable = VGG_TRANSFORM):
     img = Image.open(path)
     img = transform(img)
     img = torch.unsqueeze(img, 0) # (N, C, H, W)
