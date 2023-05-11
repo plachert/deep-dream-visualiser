@@ -23,6 +23,12 @@ class DeepDreamModel(nn.Module):
         self._activations = []
         self._register_activation_hook()
         
+    def get_target_activation(self, target_idx):
+        """Return activation of the neuron associated with the target."""
+        if not self._activations: # TODO: maybe some warning if the forward pass hasn't been called?
+            return self._activations
+        return self._activations[-1][:, target_idx]
+        
     def get_activations_by_idx(self, idxs: List[int]):
         """Return activations by indices."""
         if not self._activations: # TODO: maybe some warning if the forward pass hasn't been called?
@@ -55,5 +61,6 @@ class DeepDreamModel(nn.Module):
 if __name__ == "__main__":
     import torch
     deep_dream = DeepDreamModel(model=models.vgg16(pretrained=True))
-    deep_dream(torch.rand(1, 3, 100, 100))
     print(len(deep_dream.get_activations_by_types(["Linear"])))
+    deep_dream(torch.rand(1, 3, 100, 100))
+    # print(len(deep_dream.get_activations_by_types(["Linear"])))
