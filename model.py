@@ -1,5 +1,4 @@
 import torch.nn as nn
-from torchvision import models
 from typing import List
 
 
@@ -57,10 +56,3 @@ class ModelWithActivations(nn.Module):
         self._activations.clear()
         return self.model.forward(input_)
             
-            
-if __name__ == "__main__":
-    import torch
-    deep_dream = DeepDreamModel(model=models.vgg16(pretrained=True))
-    print(len(deep_dream.get_activations_by_types(["Linear"])))
-    deep_dream(torch.rand(1, 3, 100, 100))
-    # print(len(deep_dream.get_activations_by_types(["Linear"])))
