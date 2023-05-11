@@ -26,7 +26,7 @@ class ModelWithActivations(nn.Module):
         """Return activation of the neuron associated with the target."""
         if not self._activations: # TODO: maybe some warning if the forward pass hasn't been called?
             return self._activations
-        return [self._activations[-1][:, target_idx]] # list for consistency with other methods
+        return [self._activations[-1][1][:, target_idx]] # list for consistency with other methods
         
     def get_activations_by_idx(self, idxs: List[int]):
         """Return activations by indices."""
