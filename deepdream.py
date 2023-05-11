@@ -22,7 +22,7 @@ def smooth_grad(grad):
     grad_std = torch.std(grad)
     grad_mean = torch.mean(grad)
     grad -= grad_mean
-    grad /= grad_std
+    grad /= grad_std + 1e-5
     return grad
 
 def optimize_image(
@@ -35,10 +35,9 @@ def optimize_image(
     regularization_coeff: float = 0.1,
     lr: float = 0.1,
     ) -> np.ndarray:
-    input_image = prepare_input_image(image)
+    input_image = prepare_input_image(np.copy(image))
     for _ in tqdm(range(n_iterations)):
         model(input_image) # just to call forward and calculate activations
-        # with torch.no_grad():
         if target_idx is not None:
             activations = model.get_target_activation(target_idx)
         elif activation_types is not None:
