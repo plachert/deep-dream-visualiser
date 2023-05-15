@@ -13,11 +13,6 @@ def prepare_input_image(input_image: np.ndarray):
     input_image.requires_grad = True
     return input_image
 
-def torch_to_numpy(input_image: torch.Tensor):
-    input_image = input_image.detach().numpy()
-    input_image = np.squeeze(input_image)
-    return input_image
-
 def smooth_grad(grad):
     grad_std = torch.std(grad)
     grad_mean = torch.mean(grad)
@@ -36,7 +31,9 @@ def optimize_image(
     lr: float = 0.1,
     ) -> np.ndarray:
     input_image = prepare_input_image(np.copy(image))
+    optimizer = torch.optim.Adam([input_image], lr=lr)
     for _ in tqdm(range(n_iterations)):
+        optimizer.zero_grad()
         model(input_image) # just to call forward and calculate activations
         if target_idx is not None:
             activations = model.get_target_activation(target_idx)
@@ -46,15 +43,12 @@ def optimize_image(
             activations = model.get_activations_by_idx(activation_idxs)
         else:
             activations = model.get_all_activations()
-        losses = [F.mse_loss(activation, torch.zeros_like(activation)) for activation in activations]
-        loss = torch.mean(torch.stack(losses)) 
-        print(loss)
-        loss -= regularization_coeff * total_variation(input_image) # gradient ascent, so '-' instead of '+'
+        losses = [torch.linalg.vector_norm(activation, ord=2) for activation in activations]
+        loss = -torch.mean(torch.stack(losses)) 
+        regularization = regularization_coeff * total_variation(input_image)
+        loss += regularization
         loss.backward()
-        grad = input_image.grad.data
-        grad = smooth_grad(grad)
-        input_image.data += lr * grad # gradient ascent, so '+' instead of '-'
-        input_image.grad.data.zero_()
+        optimizer.step()
     optimized_image = input_image.detach().numpy().squeeze()
     return optimized_image
         
