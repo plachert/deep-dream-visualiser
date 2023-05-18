@@ -31,6 +31,7 @@ def optimize_image(
     lr: float = 0.1,
     ) -> np.ndarray:
     input_image = prepare_input_image(np.copy(image))
+    size = input_image.shape[-2] * input_image.shape[-1]
     optimizer = torch.optim.Adam([input_image], lr=lr)
     for _ in tqdm(range(n_iterations)):
         optimizer.zero_grad()
@@ -45,7 +46,8 @@ def optimize_image(
             activations = model.get_all_activations()
         losses = [torch.linalg.vector_norm(activation, ord=2) for activation in activations]
         loss = -torch.mean(torch.stack(losses)) 
-        regularization = regularization_coeff * total_variation(input_image)
+        regularization = regularization_coeff * total_variation(input_image) / size
+        print(loss, regularization)
         loss += regularization
         loss.backward()
         optimizer.step()
