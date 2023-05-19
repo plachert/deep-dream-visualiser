@@ -1,9 +1,10 @@
 from torchmetrics.functional import total_variation
-from model import ModelWithActivations
+from deepdream.model import ModelWithActivations
 import numpy as np
 from typing import Optional, List
 from tqdm import tqdm
 import torch
+from queue import Queue
 
 
 def prepare_input_image(input_image: np.ndarray):
@@ -28,6 +29,7 @@ def optimize_image(
     activation_idxs: Optional[List[int]] = None,
     regularization_coeff: float = 0.1,
     lr: float = 0.1,
+    frame_queue: Optional[Queue] = None,
     ) -> np.ndarray:
     input_image = prepare_input_image(np.copy(image))
     size = input_image.shape[-2] * input_image.shape[-1]
@@ -45,11 +47,13 @@ def optimize_image(
             activations = model.get_all_activations()
         losses = [torch.linalg.vector_norm(activation, ord=2) for activation in activations]
         loss = -torch.mean(torch.stack(losses)) 
-        regularization = regularization_coeff * total_variation(input_image)
+        regularization = regularization_coeff * 10000 * total_variation(input_image) / size
         loss += regularization
         loss.backward()
         optimizer.step()
+        # add to the queue to visualise the process
+        if frame_queue is not None:
+            frame_queue.put(input_image.detach().numpy().squeeze())
+        
     optimized_image = input_image.detach().numpy().squeeze()
     return optimized_image
-        
-        
