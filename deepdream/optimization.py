@@ -4,7 +4,6 @@ import numpy as np
 from typing import Optional, List
 from tqdm import tqdm
 import torch
-import torch.nn.functional as F
 
 
 def prepare_input_image(input_image: np.ndarray):
