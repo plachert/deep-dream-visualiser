@@ -45,8 +45,7 @@ def optimize_image(
             activations = model.get_all_activations()
         losses = [torch.linalg.vector_norm(activation, ord=2) for activation in activations]
         loss = -torch.mean(torch.stack(losses)) 
-        regularization = regularization_coeff * total_variation(input_image) / size
-        print(loss, regularization)
+        regularization = regularization_coeff * total_variation(input_image)
         loss += regularization
         loss.backward()
         optimizer.step()
