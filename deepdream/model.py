@@ -1,19 +1,44 @@
 import torch.nn as nn
-from typing import List
+import torch
+from typing import List, Tuple, Optional
 
 
-def flatten_modules(module):
-    flattened_modules = []
-    for child in module.children():
-        if isinstance(child, nn.Sequential):
-            flattened_modules.extend(flatten_modules(child))
-        else:
-            flattened_modules.append(child)
-    return flattened_modules
+class ActivationFilter:
+    """Abstract class for filtering strategies."""
+    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
+        raise NotImplementedError
+
+
+class TypeActivationFilter(ActivationFilter):
+    """Filter by type e.g. collect all ReLU activations."""
+    def __init__(self, types: List[str]) -> None:
+        self.types = types
+    
+    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
+        return [activation for activation in activations if activation[0] in self.types]
+
+
+class IndexActivationFilter(ActivationFilter):
+    """Filter by indices of the activations."""
+    def __init__(self, indices: List[int]) -> None:
+        self.indices = indices
+    
+    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
+        return [activations[idx] for idx in self.indices]
+    
+    
+class TargetsActivationFitler(ActivationFilter):
+    """Preserve neurons associated with given classes."""
+    def __init__(self, indices: List[int]) -> None:
+        self.indices = indices
+    
+    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
+        last_activations = activations[-1][1] # last layer
+        return [(f"target_{idx}", last_activations[:, idx]) for idx in self.indices]
 
 
 class ModelWithActivations(nn.Module):
-    def __init__(self, model: nn.Module) -> None:
+    def __init__(self, model: nn.Module, activation_filter: Optional[ActivationFilter] = None) -> None:
         super().__init__()
         self.model = model
         self.model.eval()
@@ -21,31 +46,20 @@ class ModelWithActivations(nn.Module):
             param.requires_grad = False 
         self._activations = []
         self._register_activation_hook()
-        
-    def get_target_activation(self, target_idx):
-        """Return activation of the neuron associated with the target."""
-        if not self._activations: # TODO: maybe some warning if the forward pass hasn't been called?
-            return self._activations
-        return [self._activations[-1][1][:, target_idx]] # list for consistency with other methods
-        
-    def get_activations_by_idx(self, idxs: List[int]):
-        """Return activations by indices."""
-        if not self._activations: # TODO: maybe some warning if the forward pass hasn't been called?
-            return self._activations
-        return [self._activations[idx][1] for idx in idxs]
+        self.activation_filter = activation_filter
     
-    def get_activations_by_types(self, types: List[str]):
-        """Return all activations of layers of given types e.g. ReLU."""
+    @property
+    def activations(self) -> List[torch.Tensor]:
+        """Return activations based on the activation_filter."""
         if not self._activations:
-            return self._activations # TODO: maybe some warning if the forward pass hasn't been called?
-        return [activation[1] for activation in self._activations if activation[0] in types]
-    
-    def get_all_activations(self):
-        """Return activations of all layers."""
-        idxs = list(range(0, len(self._activations)))
-        return self.get_activations_by_idx(idxs)
+            # Raise a warning if the forward pass hasn't been called
+            print("Warning: No activations available. Perform a forward pass first.")
+        filtered_activations = self._activations
+        if self.activation_filter:
+            filtered_activations = self.activation_filter.filter_activations(self._activations)
+        filtered_activations = [activation[1] for activation in filtered_activations] # remove first item in tuples
+        return filtered_activations
         
-    
     def _register_activation_hook(self):
         def activation_hook(module, input_, output):
             self._activations.append((module.__class__.__name__, output))
@@ -55,4 +69,15 @@ class ModelWithActivations(nn.Module):
     def forward(self, input_):
         self._activations.clear()
         return self.model.forward(input_)
+
+    
+def flatten_modules(module):
+    flattened_modules = []
+    for child in module.children():
+        if isinstance(child, nn.Sequential):
+            flattened_modules.extend(flatten_modules(child))
+        else:
+            flattened_modules.append(child)
+    return flattened_modules
+
             

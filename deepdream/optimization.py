@@ -30,14 +30,7 @@ def optimize_image(
     for _ in tqdm(range(n_iterations)):
         optimizer.zero_grad()
         model(input_image) # just to call forward and calculate activations
-        if target_idx is not None:
-            activations = model.get_target_activation(target_idx)
-        elif activation_types is not None:
-            activations = model.get_activations_by_types(activation_types)
-        elif activation_idxs is not None:
-            activations = model.get_activations_by_idx(activation_idxs)
-        else:
-            activations = model.get_all_activations()
+        activations = model.activations
         losses = [torch.linalg.vector_norm(activation, ord=2) for activation in activations]
         loss = -torch.mean(torch.stack(losses)) 
         regularization = regularization_coeff * 10000 * total_variation(input_image) / size
