@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Random Image Stream</title>
+    <title>Image Viewer</title>
+    <style>
+        .image-container {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Random Image Stream</h1>
-    <img src="{{ url_for('video_feed') }}" width="1024" height="768" />
+    <h1>Image Viewer</h1>
+    <div class="image-container">
+        <img src="data:image/png;base64,{{ current_image }}" alt="Image">
+    </div>
+    <div>
+        <button onclick="location.href='/previous?index={{ current_index }}'">Previous</button>
+        <input type="range" min="0" max="{{ total_images - 1 }}" value="{{ current_index }}" onchange="changeImage(this.value)">
+        <button onclick="location.href='/next?index={{ current_index }}'">Next</button>
+    </div>
+
+    <script>
+        function changeImage(index) {
+            var url = '/?index=' + index;
+            window.location.href = url;
+        };
+    </script>
 </body>
 </html>

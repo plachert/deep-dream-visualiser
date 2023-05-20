@@ -7,9 +7,9 @@ from deepdream.model import ModelWithActivations
 from torchvision.models import vgg16
 import cv2
 
-image = np.random.rand(3, 1024, 768).astype(dtype=np.float32)
+image = np.random.rand(3, 225, 225).astype(dtype=np.float32)
 model = ModelWithActivations(model=vgg16(pretrained=True))
-processed_image_quque = Queue()
+
 
 def img2frame(image):
     def deprocess(image):
@@ -28,7 +28,8 @@ def img2frame(image):
     return frame
 
 
-def run_pyramid():
+def run_pyramid(image=image):
+    images_collection = [image]
     octaves = [image]
     octave_n = 1#4
     octave_scale = 1.4
@@ -49,7 +50,9 @@ def run_pyramid():
         ox, oy = np.random.randint(-jitter, jitter+1, 2)
         input_image = np.roll(np.roll(input_image, ox, -1), oy, -2) # apply jitter shift
         
-        input_image = optimize_image(model, input_image, 40, target_idx=71, frame_queue=processed_image_quque)
+        processed_images = optimize_image(model, input_image, 30, target_idx=71)
+        input_image = processed_images[-1]
+        images_collection.extend(processed_images)
         input_image = np.roll(np.roll(input_image, -ox, -1), -oy, -2)
         detail = input_image-octave_base
-    return input_image
+    return images_collection
