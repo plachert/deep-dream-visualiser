@@ -41,7 +41,6 @@ def index():
 
     total_images = len(image_arrays)
     is_last_index = current_index == total_images - 1
-    print((request.args))
     return render_template('index.html', current_image=current_image, current_index=current_index, total_images=total_images, is_last_index=is_last_index, options=options, selected_option=selected_option)
 
 

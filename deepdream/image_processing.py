@@ -20,7 +20,7 @@ def img2frame(image):
         img[1, :, :] += 0.456
         img[2, :, :] += 0.406
         return img
-    deprocessed_image = deprocess(image)
+    deprocessed_image = image#deprocess(image)
     rescaled_image = (deprocessed_image * 255).astype(np.uint8)
     transposed_image = np.transpose(rescaled_image, (1, 2, 0))
     frame = cv2.cvtColor(transposed_image, cv2.COLOR_RGB2BGR)

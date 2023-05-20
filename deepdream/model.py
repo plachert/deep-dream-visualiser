@@ -79,5 +79,3 @@ def flatten_modules(module):
         else:
             flattened_modules.append(child)
     return flattened_modules
-
-            
