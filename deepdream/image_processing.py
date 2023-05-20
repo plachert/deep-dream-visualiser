@@ -50,7 +50,7 @@ def run_pyramid(image=image):
         ox, oy = np.random.randint(-jitter, jitter+1, 2)
         input_image = np.roll(np.roll(input_image, ox, -1), oy, -2) # apply jitter shift
         
-        processed_images = optimize_image(model, input_image, 30, target_idx=71)
+        processed_images = optimize_image(model, input_image, 3, target_idx=71)
         input_image = processed_images[-1]
         images_collection.extend(processed_images)
         input_image = np.roll(np.roll(input_image, -ox, -1), -oy, -2)

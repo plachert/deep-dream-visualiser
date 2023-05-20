@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, g
+from flask import Flask, render_template, request, redirect, url_for
 import base64
 import cv2
 import numpy as np
@@ -7,6 +7,13 @@ from deepdream.image_processing import run_pyramid
 
 
 app = Flask(__name__)
+
+# Define the options for the selection list
+options = ['option1', 'option2', 'option3']
+
+# Define the selected option variable
+selected_option = 'option1'
+image_generation_event = threading.Event()
 
 # List of image arrays
 image_arrays = [
@@ -35,7 +42,8 @@ def index():
     total_images = len(image_arrays)
     is_last_index = current_index == total_images - 1
 
-    return render_template('index.html', current_image=current_image, current_index=current_index, total_images=total_images, is_last_index=is_last_index)
+    return render_template('index.html', current_image=current_image, current_index=current_index, total_images=total_images, is_last_index=is_last_index, options=options, selected_option=selected_option)
+
 
 @app.route('/next')
 def next_image():
@@ -72,8 +80,20 @@ def previous_image():
     return render_template('index.html', current_image=previous_image, current_index=previous_index, total_images=total_images, is_last_index=is_last_index)
 
 
-def generate_images():
-    global image_arrays
+@app.route('/generate', methods=['POST'])
+def generate():
+    global image_arrays, image_generation_event
+    # selected_option = request.form['option']
+    # Start the generate_images function in a separate thread
+    image_generation_event.clear()
+    thread = threading.Thread(target=generate_images)
+    thread.start()
+    image_generation_event.wait()
+    return redirect(url_for('index'))
+
+
+def generate_images(selected_option=selected_option):
+    global image_arrays, image_generation_event
     processed_images = run_pyramid()
     def fix_processed(image):
         def deprocess(image):
@@ -89,15 +109,13 @@ def generate_images():
         rescaled_image = (deprocessed_image * 255).astype(np.uint8)
         transposed_image = np.transpose(rescaled_image, (1, 2, 0))
         return transposed_image
-    image_arrays = [fix_processed(processed_image) for processed_image in processed_images]
+    new_image_arrays = [fix_processed(processed_image) for processed_image in processed_images]
+    image_arrays = new_image_arrays
+    image_generation_event.set()
     
 
 
 # Start the image generation thread
 if __name__ == '__main__':
-    # Start the image generation thread
-    image_thread = threading.Thread(target=generate_images, daemon=True)
-    image_thread.start()
-
     app.run(debug=True)
 
