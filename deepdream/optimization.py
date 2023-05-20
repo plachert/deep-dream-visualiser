@@ -12,12 +12,6 @@ def prepare_input_image(input_image: np.ndarray):
     input_image.requires_grad = True
     return input_image
 
-def smooth_grad(grad):
-    grad_std = torch.std(grad)
-    grad_mean = torch.mean(grad)
-    grad -= grad_mean
-    grad /= grad_std + 1e-5
-    return grad
 
 def optimize_image(
     model: ModelWithActivations, 

@@ -9,10 +9,10 @@ from deepdream.image_processing import run_pyramid
 app = Flask(__name__)
 
 # Define the options for the selection list
-options = ['option1', 'option2', 'option3']
+options = [73, 208, 24]
 
 # Define the selected option variable
-selected_option = 'option1'
+selected_option = 73
 image_generation_event = threading.Event()
 
 # List of image arrays
@@ -41,7 +41,7 @@ def index():
 
     total_images = len(image_arrays)
     is_last_index = current_index == total_images - 1
-
+    print((request.args))
     return render_template('index.html', current_image=current_image, current_index=current_index, total_images=total_images, is_last_index=is_last_index, options=options, selected_option=selected_option)
 
 
@@ -83,10 +83,11 @@ def previous_image():
 @app.route('/generate', methods=['POST'])
 def generate():
     global image_arrays, image_generation_event
-    # selected_option = request.form['option']
+    selected_option = request.form['option']
     # Start the generate_images function in a separate thread
     image_generation_event.clear()
-    thread = threading.Thread(target=generate_images)
+    print(selected_option)
+    thread = threading.Thread(target=generate_images, args=(int(selected_option),))
     thread.start()
     image_generation_event.wait()
     return redirect(url_for('index'))
@@ -94,7 +95,7 @@ def generate():
 
 def generate_images(selected_option=selected_option):
     global image_arrays, image_generation_event
-    processed_images = run_pyramid()
+    processed_images = run_pyramid(target_idx=selected_option)
     def fix_processed(image):
         def deprocess(image):
             img = image.copy()
