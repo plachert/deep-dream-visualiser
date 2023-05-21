@@ -18,7 +18,7 @@ class Config:
         raise NotImplementedError
     
     @property
-    def idx2class(self) -> Dict[int, str]:
+    def class2idx(self) -> Dict[str, int]:
         raise NotImplementedError
     
 
@@ -39,16 +39,16 @@ class VGG16ImageNetConfig(Config):
     @property
     def deprocessor(self):
         return lambda img : (img * self.RGB_STD) + self.RGB_MEAN
-        
     
-    
-        
-        
-        
-if __name__ == "__main__":
-    c = VGG16ImageNetConfig()
-    image_org = np.random.rand(3, 250, 250).astype(dtype=np.float32)
-    im = c.processor(image_org)
-    im2 = c.deprocessor(im)
-    print(np.allclose(image_org, im2))
-    
+    @property
+    def class2idx(self) -> Dict[str, int]:
+        """Based on https://deeplearning.cms.waikato.ac.nz/user-guide/class-maps/IMAGENET/"""
+        mapper = {
+            "Goldfish": 1,
+            "Hammerhead shark": 4,
+            "Scorpion": 71,
+            "Centipide": 79,
+            "Jellyfish": 107,
+            "Labrador retriever": 208,   
+        }
+        return mapper
