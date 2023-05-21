@@ -2,6 +2,12 @@ import torch.nn as nn
 import torch
 from typing import List, Tuple, Optional
 
+SUPPORTED_FILTERS = {}
+
+def register_filter(cls):
+    SUPPORTED_FILTERS[cls.__name__] = cls
+    return cls
+
 
 class ActivationFilter:
     """Abstract class for filtering strategies."""
@@ -9,6 +15,7 @@ class ActivationFilter:
         raise NotImplementedError
 
 
+@register_filter
 class TypeActivationFilter(ActivationFilter):
     """Filter by type e.g. collect all ReLU activations."""
     def __init__(self, types: List[str]) -> None:
@@ -18,6 +25,7 @@ class TypeActivationFilter(ActivationFilter):
         return [activation for activation in activations if activation[0] in self.types]
 
 
+@register_filter
 class IndexActivationFilter(ActivationFilter):
     """Filter by indices of the activations."""
     def __init__(self, indices: List[int]) -> None:
@@ -26,7 +34,8 @@ class IndexActivationFilter(ActivationFilter):
     def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
         return [activations[idx] for idx in self.indices]
     
-    
+
+@register_filter 
 class TargetsActivationFitler(ActivationFilter):
     """Preserve neurons associated with given classes."""
     def __init__(self, indices: List[int]) -> None:

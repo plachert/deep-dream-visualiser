@@ -1,30 +1,22 @@
 import scipy.ndimage as nd
-import torch
 import numpy as np
 from deepdream.optimization import optimize_image
 from deepdream.model import ModelWithActivations
-from torchvision.models import vgg16
 import cv2
-
-image = np.random.rand(3, 225, 225).astype(dtype=np.float32)
-model = ModelWithActivations(model=vgg16(pretrained=True))
 
 
 def img2frame(image):
-    def deprocess(image):
-        img = image.copy()
-        img[0, :, :] *= 0.229
-        img[1, :, :] *= 0.224
-        img[2, :, :] *= 0.225
-        img[0, :, :] += 0.485
-        img[1, :, :] += 0.456
-        img[2, :, :] += 0.406
-        return img
-    deprocessed_image = image#deprocess(image)
-    rescaled_image = (deprocessed_image * 255).astype(np.uint8)
+    """Transform an image to an opencv frame."""
+    rescaled_image = (image * 255).astype(np.uint8)
     transposed_image = np.transpose(rescaled_image, (1, 2, 0))
     frame = cv2.cvtColor(transposed_image, cv2.COLOR_RGB2BGR)
     return frame
+
+def create_random_image(w=500, h=500):
+    """Create a random image (channel-first)."""
+    shape = (3, w, h)
+    image = np.random.uniform(low=0.0, high=1.0, size=shape).astype(np.float32)
+    return image
 
 def create_jitter_parameters(jitter_size: int = 30):
     """Handle parameters for jittering and reverse transformation."""
@@ -60,12 +52,12 @@ def resize_to_image(reference_image, image):
     return image_resized
 
 def run_pyramid(
-    image=image,
-    jitter_size=30,
-    target_idx=71,
-    octave_n=2,
-    octave_scale=1.4,
-    n_iterations=10,
+    model: ModelWithActivations,
+    image: np.ndarray,
+    jitter_size: int = 30,
+    octave_n: int = 2,
+    octave_scale: float = 1.4,
+    n_iterations: int = 10,
     ):
     images_collection = [image]
     reversed_pyramid = create_reversed_octave_pyramid(image, octave_n=octave_n, octave_scale=octave_scale)
@@ -76,7 +68,7 @@ def run_pyramid(
         image = octave_base + detail
         jitter_x, jitter_y, unjitter_x, unjitter_y = create_jitter_parameters(jitter_size)
         image = apply_shift(image, jitter_x, jitter_y)
-        processed_images = optimize_image(model, image, n_iterations, target_idx=target_idx)
+        processed_images = optimize_image(model, image, n_iterations)
         image = processed_images[-1]
         images_collection.extend(processed_images)
         image = apply_shift(image, unjitter_x, unjitter_y)
