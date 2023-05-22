@@ -1,121 +1,53 @@
-from flask import Flask, render_template, request, redirect, url_for
-import base64
-import cv2
-import numpy as np
-import threading
-from deepdream.image_processing import run_pyramid
+from flask import Flask, render_template, request, jsonify
 
+from flask_wtf import FlaskForm 
+from wtforms import SelectField
+from deepdream.config import SUPPORTED_CONFIGS
+from deepdream.model import SUPPORTED_FILTERS, ModelWithActivations
+from functools import lru_cache
+
+@lru_cache
+def get_strategy_params(config_name, strategy_name):
+    model = SUPPORTED_CONFIGS[config_name].classifier
+    activation_filter = SUPPORTED_FILTERS[strategy_name]([])
+    model_with_activations = ModelWithActivations(model, activation_filter)
+    return model_with_activations.strategy_parameters
+
+
+available_model_configs = list(SUPPORTED_CONFIGS.keys())
+available_strategies = list(SUPPORTED_FILTERS.keys())
 
 app = Flask(__name__)
-
-# Define the options for the selection list
-options = [73, 208, 24]
-
-# Define the selected option variable
-selected_option = 73
-image_generation_event = threading.Event()
-
-# List of image arrays
-image_arrays = [
-    np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255]], dtype=np.uint8),  # Example array, replace with your own
-    np.array([[0, 255, 255], [255, 0, 255], [255, 255, 0]], dtype=np.uint8),  # Example array, replace with your own
-    # Add more image arrays here
-]
+app.config['SECRET_KEY'] = 'secret'
 
 
-def convert_array_to_base64(array):
-    # Convert the array to an image
-    image = cv2.cvtColor(array, cv2.COLOR_RGB2BGR)
-    # Encode the image to base64
-    retval, buffer = cv2.imencode('.png', image)
-    encoded_image = base64.b64encode(buffer).decode('utf-8')
+class Form(FlaskForm):
+    model_choices = [(model_config_name, model_config_name) for model_config_name in available_model_configs]
+    strategy_choices = [(strategy_name, strategy_name) for strategy_name in available_strategies]
+    model = SelectField('model', choices=model_choices) 
+    strategy = SelectField('strategy', choices=strategy_choices) 
+    strategy_params = SelectField('strategy_params', choices=[])
 
-    return encoded_image
-
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    global image_arrays
-    current_index = int(request.args.get('index', 0))
-    current_array = image_arrays[current_index]
-    current_image = convert_array_to_base64(current_array)
+    form = Form()
+    if request.method == 'GET':
+        config_name = form.model.choices[0][0]
+        strategy_name = form.strategy.choices[0][0]
+        form.strategy_params.choices = [(param, param) for param in get_strategy_params(config_name, strategy_name)]
 
-    total_images = len(image_arrays)
-    is_last_index = current_index == total_images - 1
-    return render_template('index.html', current_image=current_image, current_index=current_index, total_images=total_images, is_last_index=is_last_index, options=options, selected_option=selected_option)
+    if request.method == 'POST':
+        config_name = form.model.data
+        strategy_name = form.strategy.data
+        form.strategy_params.choices = [(param, param) for param in get_strategy_params(config_name, strategy_name)]
+        form.strategy_params.data = request.form['strategy_params']
 
+    return render_template('index.html', form=form)
 
-@app.route('/next')
-def next_image():
-    global image_arrays
-    current_index = int(request.args.get('index', 0))
-    next_index = current_index + 1
+@app.route('/strategy_params/<model>/<strategy>')
+def strategy_params(model, strategy):
+    params = get_strategy_params(model, strategy)
+    return jsonify({'strategy_params' : params})
 
-    if next_index >= len(image_arrays):
-        next_index = len(image_arrays) - 1
-
-    next_array = image_arrays[next_index]
-    next_image = convert_array_to_base64(next_array)
-
-    total_images = len(image_arrays)
-    is_last_index = next_index == total_images - 1
-
-    return render_template('index.html', current_image=next_image, current_index=next_index, total_images=total_images, is_last_index=is_last_index)
-
-@app.route('/previous')
-def previous_image():
-    global image_arrays
-    current_index = int(request.args.get('index', 0))
-    previous_index = current_index - 1
-
-    if previous_index < 0:
-        previous_index = 0
-
-    previous_array = image_arrays[previous_index]
-    previous_image = convert_array_to_base64(previous_array)
-
-    total_images = len(image_arrays)
-    is_last_index = previous_index == total_images - 1
-
-    return render_template('index.html', current_image=previous_image, current_index=previous_index, total_images=total_images, is_last_index=is_last_index)
-
-
-@app.route('/generate', methods=['POST'])
-def generate():
-    global image_arrays, image_generation_event
-    selected_option = request.form['option']
-    # Start the generate_images function in a separate thread
-    image_generation_event.clear()
-    print(selected_option)
-    thread = threading.Thread(target=generate_images, args=(int(selected_option),))
-    thread.start()
-    image_generation_event.wait()
-    return redirect(url_for('index'))
-
-
-def generate_images(selected_option=selected_option):
-    global image_arrays, image_generation_event
-    processed_images = run_pyramid(target_idx=selected_option)
-    def fix_processed(image):
-        def deprocess(image):
-            img = image.copy()
-            img[0, :, :] *= 0.229
-            img[1, :, :] *= 0.224
-            img[2, :, :] *= 0.225
-            img[0, :, :] += 0.485
-            img[1, :, :] += 0.456
-            img[2, :, :] += 0.406
-            return img
-        deprocessed_image = deprocess(image)
-        rescaled_image = (deprocessed_image * 255).astype(np.uint8)
-        transposed_image = np.transpose(rescaled_image, (1, 2, 0))
-        return transposed_image
-    new_image_arrays = [fix_processed(processed_image) for processed_image in processed_images]
-    image_arrays = new_image_arrays
-    image_generation_event.set()
-    
-
-
-# Start the image generation thread
 if __name__ == '__main__':
     app.run(debug=True)
-

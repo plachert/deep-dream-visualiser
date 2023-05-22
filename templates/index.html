@@ -1,72 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Image Viewer</title>
-    <style>
-        .slider {
-            width: 80%;
-            margin: 0 auto;
-        }
-
-        .slider input {
-            width: 100%;
-        }
-
-        .image-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <title>Document</title>
 </head>
 <body>
-    <h1>Image Viewer</h1>
-
-    <!-- Add the selection list -->
-    <form action="/generate" method="post">
-        <label for="option">Select an option:</label>
-        <select name="option" id="option">
-            {% for option in options %}
-            <option value="{{ option }}" {% if option == selected_option %}selected{% endif %}>{{ option }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Generate Images</button>
+    <form method="POST">
+    {{ form.csrf_token }}
+    {{ form.model }}
+    {{ form.strategy }}
+    {{ form.strategy_params }}
+    <input type="submit">
     </form>
-
-    <br>
-
-    <!-- Slider to navigate between images -->
-    <div class="slider">
-        <input type="range" min="0" max="{{ total_images - 1 }}" value="{{ current_index }}" class="slider" id="image-slider">
-    </div>
-
-    <!-- Display the current image -->
-    <div class="image-container">
-        <img src="data:image/png;base64,{{ current_image }}" alt="Current Image">
-    </div>
-
-    <!-- Navigation buttons -->
-    <div class="navigation">
-        {% if not is_last_index %}
-            <a href="/next?index={{ current_index }}">Next</a>
-        {% endif %}
-        {% if current_index > 0 %}
-            <a href="/previous?index={{ current_index }}">Previous</a>
-        {% endif %}
-    </div>
-
     <script>
-        // Slider event handler to update the image when the slider is moved
-        var slider = document.getElementById('image-slider');
-        slider.addEventListener('input', function () {
-            window.location.href = '/?index=' + this.value;
-        });
-    </script>
+        var model_select = document.getElementById("model");
+        var strategy_select = document.getElementById("strategy");
+        var strategy_params_select = document.getElementById("strategy_params");
 
+        model_select.onchange = function() {
+            fetchData();
+        };
+        strategy_select.onchange = function() {
+            fetchData();
+        };
+
+        function fetchData() {
+            var model = model_select.value;
+            var strategy = strategy_select.value;
+
+            fetch('/strategy_params/' + model + "/" + strategy)
+        .then(function(response) {
+            response.json().then(function(data) {
+                var optionHTML = '';
+                for (var param of data.strategy_params) {
+                    optionHTML += '<option value="' + param + '">' + param + '</option>';
+                }
+                strategy_params_select.innerHTML = optionHTML;
+            });
+        });
+        }
+
+        
+    </script>
 </body>
 </html>
