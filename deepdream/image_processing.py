@@ -3,19 +3,33 @@ import numpy as np
 from deepdream.optimization import optimize_image
 from deepdream.model import ModelWithActivations
 import cv2
+import pathlib
+from PIL import Image
+import base64
 
+def channel_last(image):
+    transposed = np.transpose(image, (1, 2, 0))
+    return transposed
 
-def img2frame(image):
-    """Transform an image to an opencv frame."""
-    rescaled_image = (image * 255).astype(np.uint8)
-    transposed_image = np.transpose(rescaled_image, (1, 2, 0))
-    frame = cv2.cvtColor(transposed_image, cv2.COLOR_RGB2BGR)
-    return frame
+def channel_first(image):
+    transposed = np.transpose(image, (2, 0, 1))
+    return transposed
 
-def create_random_image(w=500, h=500):
+def img2base64(image):
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    _, buffer = cv2.imencode('.png', image)
+    encoded_image = base64.b64encode(buffer).decode('utf-8')
+    return encoded_image
+
+def load_image_from(path: pathlib.Path):
+    """Load an image as a np.ndarray (3, w, h)"""
+    image = np.array(Image.open(path))
+    return channel_first(image)
+
+def create_random_image(h=500, w=500):
     """Create a random image (channel-first)."""
-    shape = (3, w, h)
-    image = np.random.uniform(low=0.0, high=1.0, size=shape).astype(np.float32)
+    shape = (3, h, w)
+    image = np.random.uniform(low=0.0, high=255, size=shape).astype(np.float32)
     return image
 
 def create_jitter_parameters(jitter_size: int = 30):
