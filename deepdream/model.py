@@ -57,7 +57,7 @@ class TargetsActivationFitler(ActivationFilter):
     
     def list_all_available_parameters(self, activations: List[Tuple[str, torch.Tensor]]) -> List:
         last_activation = activations[-1][1]
-        return list(range(last_activation.shape[-1]))
+        return list(range(10))#last_activation.shape[-1]#list(range(10000))##list(range(last_activation.shape[-1]))
 
 
 class ModelWithActivations(nn.Module):
@@ -88,6 +88,7 @@ class ModelWithActivations(nn.Module):
         
     def _register_activation_hook(self):
         def activation_hook(module, input_, output):
+            print(module)
             self._activations.append((module.__class__.__name__, output))
         for layer in flatten_modules(self.model):
             activation_hook(layer, None, None)
