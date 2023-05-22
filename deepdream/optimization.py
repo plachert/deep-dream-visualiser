@@ -17,9 +17,6 @@ def optimize_image(
     model: ModelWithActivations, 
     image: np.ndarray,
     n_iterations: int = 10,
-    target_idx: Optional[int] = None,
-    activation_types: Optional[str] = None,
-    activation_idxs: Optional[List[int]] = None,
     regularization_coeff: float = 0.1,
     lr: float = 0.1,
     ) -> np.ndarray:

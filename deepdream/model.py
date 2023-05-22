@@ -88,7 +88,6 @@ class ModelWithActivations(nn.Module):
         
     def _register_activation_hook(self):
         def activation_hook(module, input_, output):
-            print(module)
             self._activations.append((module.__class__.__name__, output))
         for layer in flatten_modules(self.model):
             activation_hook(layer, None, None)

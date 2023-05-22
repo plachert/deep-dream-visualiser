@@ -6,12 +6,24 @@
 </head>
 <body>
     <form method="POST">
-    {{ form.csrf_token }}
-    {{ form.model }}
-    {{ form.strategy }}
-    {{ form.strategy_params }}
+    {{ deepdream_parameters_form.csrf_token }}
+    {{ deepdream_parameters_form.model }}
+    {{ deepdream_parameters_form.strategy }}
+    {{ deepdream_parameters_form.strategy_params }}
     <input type="submit">
     </form>
+
+    <form method="POST">
+    <input type="submit" value="NEXT" name="next"/>
+    <input type="submit" value="PREVIOUS" name="previous"/>
+    </form>
+
+    <!-- Display the current image -->
+    <div class="image-container">
+        <img src="data:image/png;base64,{{ current_image }}" alt="Current Image">
+    </div>
+
+
     <script>
         var model_select = document.getElementById("model");
         var strategy_select = document.getElementById("strategy");
@@ -39,7 +51,6 @@
             });
         });
         }
-
         
     </script>
 </body>
