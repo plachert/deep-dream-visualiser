@@ -6,17 +6,19 @@
 </head>
 <body>
     <form method="POST">
-    {{ deepdream_parameters_form.csrf_token }}
-    {{ deepdream_parameters_form.model }}
-    {{ deepdream_parameters_form.strategy }}
-    {{ deepdream_parameters_form.strategy_params }}
-    <input type="submit">
+        {{ deepdream_parameters_form.csrf_token }}
+        {{ deepdream_parameters_form.model }}
+        {{ deepdream_parameters_form.strategy }}
+        {{ deepdream_parameters_form.strategy_params }}
+        {{ deepdream_parameters_form.run_deepdream }}
     </form>
 
-    <form method="POST">
-    <input type="submit" value="NEXT" name="next"/>
-    <input type="submit" value="PREVIOUS" name="previous"/>
+    <form method="POST" action="{{ url_for('image_viewer') }}">
+        {{ image_viewer_form.csrf_token }}
+        {{ image_viewer_form.previous }}
+        {{ image_viewer_form.next }}
     </form>
+
 
     <!-- Display the current image -->
     <div class="image-container">
