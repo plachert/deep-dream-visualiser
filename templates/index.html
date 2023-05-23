@@ -2,29 +2,107 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Document</title>
+    <title>DeepDream Parameters</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .form-container {
+            width: 50%;
+            margin-right: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: inline-block;
+            width: 150px;
+        }
+
+        .form-group select,
+        .form-group input[type="file"] {
+            width: 200px;
+            padding: 5px;
+        }
+
+        .button-group {
+            margin-top: 10px;
+        }
+
+        .button-group button {
+            margin-right: 10px;
+        }
+
+        .image-container {
+            width: 50%;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
 </head>
 <body>
-    <form method="POST">
-        {{ deepdream_parameters_form.csrf_token }}
-        {{ deepdream_parameters_form.model }}
-        {{ deepdream_parameters_form.strategy }}
-        {{ deepdream_parameters_form.strategy_params }}
-        {{ deepdream_parameters_form.run_deepdream }}
-    </form>
+    <div class="container">
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                {{ deepdream_parameters_form.csrf_token }}
+                <div class="form-group">
+                    <label for="model">Model:</label>
+                    {{ deepdream_parameters_form.model }}
+                </div>
+                <div class="form-group">
+                    <label for="strategy">Strategy:</label>
+                    {{ deepdream_parameters_form.strategy }}
+                </div>
+                <div class="form-group">
+                    <label for="strategy_params">Strategy Parameters:</label>
+                    {{ deepdream_parameters_form.strategy_params }}
+                </div>
+                <div class="form-group">
+                    <label for="image">Upload Image:</label>
+                    {{ deepdream_parameters_form.image }}
+                </div>
+                <div class="form-group">
+                    <label for="jitter_size">Jitter Size:</label>
+                    {{ deepdream_parameters_form.jitter_size }}
+                </div>
+                <div class="form-group">
+                    <label for="octave_n">Octave N:</label>
+                    {{ deepdream_parameters_form.octave_n }}
+                </div>
+                <div class="form-group">
+                    <label for="octave_scale">Octave Scale:</label>
+                    {{ deepdream_parameters_form.octave_scale }}
+                </div>
+                <div class="form-group">
+                    <label for="n_iterations">Number of Iterations:</label>
+                    {{ deepdream_parameters_form.n_iterations }}
+                </div>
+                <div class="button-group">
+                    {{ deepdream_parameters_form.run_deepdream }}
+                    <input type="submit" name="reset" value="Reset">
+                </div>
+            </form>
+        </div>
 
-    <form method="POST" action="{{ url_for('image_viewer') }}">
-        {{ image_viewer_form.csrf_token }}
-        {{ image_viewer_form.previous }}
-        {{ image_viewer_form.next }}
-    </form>
-
-
-    <!-- Display the current image -->
-    <div class="image-container">
-        <img src="data:image/png;base64,{{ current_image }}" alt="Current Image">
+        <div class="image-container">
+            <img src="{{ url_for('static', filename=gif_url) }}" alt="">
+        </div>
     </div>
-
 
     <script>
         var model_select = document.getElementById("model");
@@ -43,17 +121,16 @@
             var strategy = strategy_select.value;
 
             fetch('/strategy_params/' + model + "/" + strategy)
-        .then(function(response) {
-            response.json().then(function(data) {
-                var optionHTML = '';
-                for (var param of data.strategy_params) {
-                    optionHTML += '<option value="' + param + '">' + param + '</option>';
-                }
-                strategy_params_select.innerHTML = optionHTML;
-            });
-        });
+                .then(function(response) {
+                    response.json().then(function(data) {
+                        var optionHTML = '';
+                        for (var param of data.strategy_params) {
+                            optionHTML += '<option value="' + param + '">' + param + '</option>';
+                        }
+                        strategy_params_select.innerHTML = optionHTML;
+                    });
+                });
         }
-        
     </script>
 </body>
 </html>
