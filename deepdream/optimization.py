@@ -7,6 +7,7 @@ import torch
 
 
 def prepare_input_image(input_image: np.ndarray):
+    input_image = input_image.astype(dtype=np.float32)
     input_image = torch.from_numpy(input_image)
     input_image = torch.unsqueeze(input_image, 0) # minibatch
     input_image.requires_grad = True

@@ -1,15 +1,16 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-
+from typing import List, Optional
 from flask_wtf import FlaskForm 
 from wtforms.validators import DataRequired
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import SelectField, SubmitField, IntegerField, FloatField
+from wtforms import SelectField, SubmitField, IntegerField, FloatField, SelectMultipleField
 from deepdream.config import SUPPORTED_CONFIGS
 from deepdream.model import SUPPORTED_FILTERS, ModelWithActivations
 from functools import lru_cache
-from deepdream.image_processing import load_image_from, img2base64, create_random_image, channel_last, create_gif
+from deepdream.image_processing import load_image_from, create_random_image, channel_last, create_gif, run_pyramid
 import pathlib
 from werkzeug.utils import secure_filename
+import numpy as np
 
 
 @lru_cache
@@ -20,15 +21,41 @@ def get_strategy_params(config_name, strategy_name):
     return model_with_activations.strategy_parameters
 
 
+def run_deepdream(
+    image_path: Optional[pathlib.Path],
+    config_name: str,
+    strategy_name: str,
+    strategy_params: List, 
+    jitter_size: int,
+    octave_n: int,
+    octave_scale: float,
+    n_iterations: int,
+):
+    filter_activation = SUPPORTED_FILTERS[strategy_name](strategy_params)
+    config = SUPPORTED_CONFIGS[config_name]
+    classifier = config.classifier
+    processor = config.processor
+    deprocessor = config.deprocessor
+    model_with_activations = ModelWithActivations(classifier, filter_activation)
+    if image_path is None:
+        input_image = create_random_image()
+    else:
+        input_image = load_image_from(image_path)
+    input_image = processor(input_image)
+    images = run_pyramid(
+        model_with_activations, 
+        input_image,
+        jitter_size,
+        octave_n,
+        octave_scale,
+        n_iterations,
+        )
+    images = [channel_last(deprocessor(image)).astype(np.uint8) for image in images]
+    return images
+
+
 available_model_configs = list(SUPPORTED_CONFIGS.keys())
 available_strategies = list(SUPPORTED_FILTERS.keys())
-image_arrays = [
-    channel_last(load_image_from(pathlib.Path("examples/sky.jpg"))),
-    channel_last(load_image_from(pathlib.Path("examples/sky.jpg"))),
-]
-
-image_viewer_data = {"image_list": image_arrays}
-        
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -41,7 +68,7 @@ class DeepDreamParametersForm(FlaskForm):
     strategy_choices = [(strategy_name, strategy_name) for strategy_name in available_strategies]
     model = SelectField('model', choices=model_choices, validators=[DataRequired()]) 
     strategy = SelectField('strategy', choices=strategy_choices, validators=[DataRequired()]) 
-    strategy_params = SelectField('strategy_params', choices=[], validators=[DataRequired()])
+    strategy_params = SelectMultipleField('strategy_params', choices=[], validators=[DataRequired()])
     image = FileField('Upload Image', validators=[FileAllowed(app.config['ALLOWED_EXTENSIONS'], 'Images only!')])
     jitter_size = IntegerField('Jitter Size', default=30)
     octave_n = IntegerField('Octave N', default=2)
@@ -74,11 +101,27 @@ def index():
         file_path = None
         if image is not None:
             filename = secure_filename(image.filename)
-            file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
+            file_path = pathlib.Path(app.config['UPLOAD_FOLDER'] + '/' + filename)
             image.save(file_path)
-
         if deepdream_parameters_form.run_deepdream.data:
-            gif_url = create_gif(image_viewer_data['image_list'], "processed.gif")
+            strategy_params = deepdream_parameters_form.strategy_params.data
+            jitter_size = deepdream_parameters_form.jitter_size.data
+            octave_n = deepdream_parameters_form.octave_n.data
+            octave_scale = deepdream_parameters_form.octave_scale.data
+            n_iterations = deepdream_parameters_form.n_iterations.data
+            images = run_deepdream(
+                image_path=file_path,
+                config_name=config_name,
+                strategy_name=strategy_name,
+                strategy_params=strategy_params, 
+                jitter_size=jitter_size,
+                octave_n=octave_n,
+                octave_scale=octave_scale,
+                n_iterations=n_iterations,
+            )
+            
+            gif_url = create_gif(images, "static/processed.gif")
+            gif_url = gif_url.split('/')[-1]
             
     return render_template(
         'index.html', 

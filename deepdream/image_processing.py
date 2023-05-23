@@ -37,7 +37,7 @@ def load_image_from(path: pathlib.Path):
 def create_random_image(h=500, w=500):
     """Create a random image (channel-first)."""
     shape = (3, h, w)
-    image = np.random.uniform(low=0.0, high=255, size=shape).astype(np.float32)
+    image = np.random.uniform(low=0.0, high=255, size=shape).astype(np.uint8)
     return image
 
 def create_jitter_parameters(jitter_size: int = 30):
