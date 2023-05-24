@@ -54,7 +54,7 @@ def run_deepdream(
         octave_scale,
         n_iterations,
         )
-    images = [convert_to_base64(255*channel_last(deprocessor(image))) for image in images]
+    images = [convert_to_base64(deprocessor(image)) for image in images]
     print(len(images))
     return images
 

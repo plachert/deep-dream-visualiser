@@ -9,6 +9,10 @@ from PIL import Image
 import base64
 
 def convert_to_base64(image):
+    # input - channel-first 0-1 scale
+    image = 255 * channel_last(image)
+    image = image.astype(np.uint8)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, jpeg_image = cv2.imencode('.jpg', image)
     base64_image = base64.b64encode(jpeg_image.tobytes()).decode('utf-8')
     return base64_image
@@ -22,7 +26,6 @@ def channel_first(image):
     return transposed
 
 def img2base64(image):
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, buffer = cv2.imencode('.png', image)
     encoded_image = base64.b64encode(buffer).decode('utf-8')
     return encoded_image
@@ -36,7 +39,7 @@ def load_image_from(path: pathlib.Path):
 def create_random_image(h=500, w=500):
     """Create a random image (channel-first)."""
     shape = (3, h, w)
-    image = np.random.uniform(low=0.0, high=255, size=shape).astype(np.uint8)
+    image = np.random.uniform(low=0.0, high=1, size=shape).astype(np.float32)
     return image
 
 def create_jitter_parameters(jitter_size: int = 30):
@@ -90,8 +93,8 @@ def run_pyramid(
         jitter_x, jitter_y, unjitter_x, unjitter_y = create_jitter_parameters(jitter_size)
         image = apply_shift(image, jitter_x, jitter_y)
         processed_images = optimize_image(model, image, n_iterations)
-        image = processed_images[-1]
+        processed_images = [apply_shift(image, unjitter_x, unjitter_y) for image in processed_images]
         images_collection.extend(processed_images)
-        image = apply_shift(image, unjitter_x, unjitter_y)
+        image = processed_images[-1]
         detail = image - octave_base
     return images_collection

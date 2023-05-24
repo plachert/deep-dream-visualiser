@@ -22,7 +22,7 @@ def optimize_image(
     lr: float = 0.1,
     ) -> np.ndarray:
     input_image = prepare_input_image(np.copy(image))
-    processed_images = [np.copy(image)]
+    processed_images = []
     size = input_image.shape[-2] * input_image.shape[-1]
     optimizer = torch.optim.Adam([input_image], lr=lr)
     for _ in tqdm(range(n_iterations)):
