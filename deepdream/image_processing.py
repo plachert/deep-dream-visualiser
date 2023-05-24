@@ -7,13 +7,7 @@ import cv2
 import pathlib
 from PIL import Image
 import base64
-import imageio
 
-
-def create_gif(images: List[np.ndarray], path: pathlib.Path):
-    """Create a gif from channel-last images and save it on disk."""
-    imageio.mimsave(path, images, format="GIF", duration=0.5)
-    return path
 
 def channel_last(image):
     transposed = np.transpose(image, (1, 2, 0))
