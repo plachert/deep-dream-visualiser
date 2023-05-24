@@ -8,6 +8,10 @@ import pathlib
 from PIL import Image
 import base64
 
+def convert_to_base64(image):
+    _, jpeg_image = cv2.imencode('.jpg', image)
+    base64_image = base64.b64encode(jpeg_image.tobytes()).decode('utf-8')
+    return base64_image
 
 def channel_last(image):
     transposed = np.transpose(image, (1, 2, 0))
@@ -25,7 +29,8 @@ def img2base64(image):
 
 def load_image_from(path: pathlib.Path):
     """Load an image as a np.ndarray (3, w, h)"""
-    image = np.array(Image.open(path))
+    image = np.array(Image.open(path)).astype(np.float32)
+    image /= 255.
     return channel_first(image)
 
 def create_random_image(h=500, w=500):
