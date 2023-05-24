@@ -1,8 +1,14 @@
-import torch.nn as nn
+from __future__ import annotations
+
+from typing import List
+from typing import Optional
+from typing import Tuple
+
 import torch
-from typing import List, Tuple, Optional
+import torch.nn as nn
 
 SUPPORTED_FILTERS = {}
+
 
 def register_filter(cls):
     SUPPORTED_FILTERS[cls.__name__] = cls
@@ -11,10 +17,11 @@ def register_filter(cls):
 
 class ActivationFilter:
     """Abstract class for filtering strategies."""
-    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
+
+    def filter_activations(self, activations: list[tuple[str, torch.Tensor]]) -> list[tuple[str, torch.Tensor]]:
         raise NotImplementedError
 
-    def list_all_available_parameters(self, activations: List[Tuple[str, torch.Tensor]]) -> List:
+    def list_all_available_parameters(self, activations: list[tuple[str, torch.Tensor]]) -> list:
         """List all available options based on the strategy."""
         raise NotImplementedError
 
@@ -22,46 +29,50 @@ class ActivationFilter:
 @register_filter
 class TypeActivationFilter(ActivationFilter):
     """Filter by type e.g. collect all ReLU activations."""
-    def __init__(self, types: List[str]) -> None:
+
+    def __init__(self, types: list[str]) -> None:
         self.types = types
 
-    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
+    def filter_activations(self, activations: list[tuple[str, torch.Tensor]]) -> list[tuple[str, torch.Tensor]]:
         return [activation for activation in activations if activation[0] in self.types]
 
-    def list_all_available_parameters(self, activations: List[Tuple[str, torch.Tensor]]) -> List:
-        return list(set([activation[0] for activation in activations]))
+    def list_all_available_parameters(self, activations: list[tuple[str, torch.Tensor]]) -> list:
+        return list({activation[0] for activation in activations})
 
 
 @register_filter
 class IndexActivationFilter(ActivationFilter):
     """Filter by indices of the activations."""
-    def __init__(self, indices: List[int]) -> None:
+
+    def __init__(self, indices: list[int]) -> None:
         self.indices = indices
 
-    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
+    def filter_activations(self, activations: list[tuple[str, torch.Tensor]]) -> list[tuple[str, torch.Tensor]]:
         return [activations[idx] for idx in self.indices]
 
-    def list_all_available_parameters(self, activations: List[Tuple[str, torch.Tensor]]) -> List:
+    def list_all_available_parameters(self, activations: list[tuple[str, torch.Tensor]]) -> list:
         return list(range(len(activations)))
 
 
 @register_filter
 class TargetsActivationFitler(ActivationFilter):
     """Preserve neurons associated with given classes."""
-    def __init__(self, indices: List[int]) -> None:
+
+    def __init__(self, indices: list[int]) -> None:
         self.indices = list(map(int, indices))
 
-    def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
-        last_activation = activations[-1][1] # last layer
-        return [(f"target_{idx}", last_activation[:, idx]) for idx in self.indices]
+    def filter_activations(self, activations: list[tuple[str, torch.Tensor]]) -> list[tuple[str, torch.Tensor]]:
+        last_activation = activations[-1][1]  # last layer
+        return [(f'target_{idx}', last_activation[:, idx]) for idx in self.indices]
 
-    def list_all_available_parameters(self, activations: List[Tuple[str, torch.Tensor]]) -> List:
+    def list_all_available_parameters(self, activations: list[tuple[str, torch.Tensor]]) -> list:
         last_activation = activations[-1][1]
-        return list(range(10))#last_activation.shape[-1]#list(range(10000))##list(range(last_activation.shape[-1]))
+        # last_activation.shape[-1]#list(range(10000))##list(range(last_activation.shape[-1]))
+        return list(range(10))
 
 
 class ModelWithActivations(nn.Module):
-    def __init__(self, model: nn.Module, activation_filter: Optional[ActivationFilter] = None) -> None:
+    def __init__(self, model: nn.Module, activation_filter: ActivationFilter | None = None) -> None:
         super().__init__()
         self.model = model
         self.model.eval()
@@ -78,12 +89,18 @@ class ModelWithActivations(nn.Module):
         return self.activation_filter.list_all_available_parameters(self._activations)
 
     @property
-    def activations(self) -> List[torch.Tensor]:
+    def activations(self) -> list[torch.Tensor]:
         """Return activations based on the activation_filter."""
         filtered_activations = self._activations
         if self.activation_filter:
-            filtered_activations = self.activation_filter.filter_activations(self._activations)
-        filtered_activations = [activation[1] for activation in filtered_activations] # remove first item in tuples
+            filtered_activations = self.activation_filter.filter_activations(
+                self._activations,
+            )
+        # remove first item in tuples
+        filtered_activations = [
+            activation[1]
+            for activation in filtered_activations
+        ]
         return filtered_activations
 
     def _register_activation_hook(self):

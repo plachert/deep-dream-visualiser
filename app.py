@@ -1,18 +1,31 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, Response
-from typing import List, Optional
-from flask_wtf import FlaskForm
-from wtforms.validators import DataRequired
-from flask_wtf.file import FileField, FileAllowed
-from wtforms import SelectField, SubmitField, IntegerField, FloatField, SelectMultipleField
-from deepdream.config import SUPPORTED_CONFIGS
-from deepdream.model import SUPPORTED_FILTERS, ModelWithActivations
-from functools import lru_cache
-from deepdream.image_processing import load_image_from, create_random_image, channel_last, run_pyramid, convert_to_base64
+from __future__ import annotations
+
 import pathlib
+from functools import lru_cache
+
+from flask import Flask
+from flask import jsonify
+from flask import render_template
+from flask import request
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed
+from flask_wtf.file import FileField
 from werkzeug.utils import secure_filename
-import numpy as np
-import cv2
-import threading
+from wtforms import FloatField
+from wtforms import IntegerField
+from wtforms import SelectField
+from wtforms import SelectMultipleField
+from wtforms import SubmitField
+from wtforms.validators import DataRequired
+
+from deepdream.config import SUPPORTED_CONFIGS
+from deepdream.image_processing import channel_last
+from deepdream.image_processing import convert_to_base64
+from deepdream.image_processing import create_random_image
+from deepdream.image_processing import load_image_from
+from deepdream.image_processing import run_pyramid
+from deepdream.model import ModelWithActivations
+from deepdream.model import SUPPORTED_FILTERS
 
 images = []
 
@@ -26,10 +39,10 @@ def get_strategy_params(config_name, strategy_name):
 
 
 def run_deepdream(
-    image_path: Optional[pathlib.Path],
+    image_path: pathlib.Path | None,
     config_name: str,
     strategy_name: str,
-    strategy_params: List,
+    strategy_params: list,
     jitter_size: int,
     octave_n: int,
     octave_scale: float,
@@ -42,7 +55,9 @@ def run_deepdream(
     classifier = config.classifier
     processor = config.processor
     deprocessor = config.deprocessor
-    model_with_activations = ModelWithActivations(classifier, filter_activation)
+    model_with_activations = ModelWithActivations(
+        classifier, filter_activation,
+    )
     if image_path is None:
         input_image = create_random_image()
     else:
@@ -57,7 +72,7 @@ def run_deepdream(
         n_iterations=n_iterations,
         regularization_coeff=regularization_coeff,
         lr=lr,
-        )
+    )
     images = [convert_to_base64(deprocessor(image)) for image in images]
     return images
 
@@ -72,12 +87,31 @@ app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg'}
 
 
 class DeepDreamParametersForm(FlaskForm):
-    model_choices = [(model_config_name, model_config_name) for model_config_name in available_model_configs]
-    strategy_choices = [(strategy_name, strategy_name) for strategy_name in available_strategies]
-    model = SelectField('model', choices=model_choices, validators=[DataRequired()])
-    strategy = SelectField('strategy', choices=strategy_choices, validators=[DataRequired()])
-    strategy_params = SelectMultipleField('strategy_params', choices=[], validators=[DataRequired()])
-    uploaded_image = FileField('Upload Image', validators=[FileAllowed(app.config['ALLOWED_EXTENSIONS'], 'Images only!')])
+    model_choices = [
+        (model_config_name, model_config_name)
+        for model_config_name in available_model_configs
+    ]
+    strategy_choices = [
+        (strategy_name, strategy_name)
+        for strategy_name in available_strategies
+    ]
+    model = SelectField(
+        'model', choices=model_choices,
+        validators=[DataRequired()],
+    )
+    strategy = SelectField(
+        'strategy', choices=strategy_choices, validators=[DataRequired()],
+    )
+    strategy_params = SelectMultipleField(
+        'strategy_params', choices=[], validators=[DataRequired()],
+    )
+    uploaded_image = FileField(
+        'Upload Image', validators=[
+            FileAllowed(
+                app.config['ALLOWED_EXTENSIONS'], 'Images only!',
+            ),
+        ],
+    )
     jitter_size = IntegerField('Jitter Size', default=30)
     octave_n = IntegerField('Octave N', default=2)
     octave_scale = FloatField('Octave Scale', default=1.4)
@@ -94,17 +128,23 @@ def index():
     if request.method == 'GET':
         config_name = deepdream_parameters_form.model.choices[0][0]
         strategy_name = deepdream_parameters_form.strategy.choices[0][0]
-        deepdream_parameters_form.strategy_params.choices = [(param, param) for param in get_strategy_params(config_name, strategy_name)]
+        deepdream_parameters_form.strategy_params.choices = [
+            (param, param) for param in get_strategy_params(config_name, strategy_name)
+        ]
 
     if request.method == 'POST':
         config_name = deepdream_parameters_form.model.data
         strategy_name = deepdream_parameters_form.strategy.data
-        deepdream_parameters_form.strategy_params.choices = [(param, param) for param in get_strategy_params(config_name, strategy_name)]
+        deepdream_parameters_form.strategy_params.choices = [
+            (param, param) for param in get_strategy_params(config_name, strategy_name)
+        ]
         image = deepdream_parameters_form.uploaded_image.data
         file_path = None
         if image is not None:
             filename = secure_filename(image.filename)
-            file_path = pathlib.Path(app.config['UPLOAD_FOLDER'] + '/' + filename)
+            file_path = pathlib.Path(
+                app.config['UPLOAD_FOLDER'] + '/' + filename,
+            )
             image.save(file_path)
         if deepdream_parameters_form.run_deepdream.data:
             strategy_params = deepdream_parameters_form.strategy_params.data
@@ -131,13 +171,14 @@ def index():
         'index.html',
         deepdream_parameters_form=deepdream_parameters_form,
         images=images,
-        )
+    )
 
 
 @app.route('/strategy_params/<model>/<strategy>')
 def strategy_params(model, strategy):
     params = get_strategy_params(model, strategy)
-    return jsonify({'strategy_params' : params})
+    return jsonify({'strategy_params': params})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
