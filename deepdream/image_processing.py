@@ -13,7 +13,7 @@ import imageio
 def create_gif(images: List[np.ndarray], path: pathlib.Path):
     """Create a gif from channel-last images and save it on disk."""
     imageio.mimsave(path, images, format="GIF", duration=0.5)
-    return path 
+    return path
 
 def channel_last(image):
     transposed = np.transpose(image, (1, 2, 0))
@@ -45,7 +45,7 @@ def create_jitter_parameters(jitter_size: int = 30):
     jitter_x, jitter_y = np.random.randint(-jitter_size, jitter_size+1, 2)
     unjitter_x, unjitter_y = -jitter_x, -jitter_y
     return jitter_x, jitter_y, unjitter_x, unjitter_y
-        
+
 def apply_shift(image, ox, oy):
     """Apply jitter shift."""
     shifted_image = np.roll(np.roll(image, ox, -1), oy, -2)

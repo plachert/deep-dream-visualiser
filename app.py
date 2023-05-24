@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, Response
 from typing import List, Optional
-from flask_wtf import FlaskForm 
+from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import SelectField, SubmitField, IntegerField, FloatField, SelectMultipleField
@@ -40,7 +40,7 @@ def run_deepdream(
     image_path: Optional[pathlib.Path],
     config_name: str,
     strategy_name: str,
-    strategy_params: List, 
+    strategy_params: List,
     jitter_size: int,
     octave_n: int,
     octave_scale: float,
@@ -58,7 +58,7 @@ def run_deepdream(
         input_image = load_image_from(image_path)
     input_image = processor(input_image)
     images = run_pyramid(
-        model_with_activations, 
+        model_with_activations,
         input_image,
         jitter_size,
         octave_n,
@@ -81,8 +81,8 @@ app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png'}
 class DeepDreamParametersForm(FlaskForm):
     model_choices = [(model_config_name, model_config_name) for model_config_name in available_model_configs]
     strategy_choices = [(strategy_name, strategy_name) for strategy_name in available_strategies]
-    model = SelectField('model', choices=model_choices, validators=[DataRequired()]) 
-    strategy = SelectField('strategy', choices=strategy_choices, validators=[DataRequired()]) 
+    model = SelectField('model', choices=model_choices, validators=[DataRequired()])
+    strategy = SelectField('strategy', choices=strategy_choices, validators=[DataRequired()])
     strategy_params = SelectMultipleField('strategy_params', choices=[], validators=[DataRequired()])
     uploaded_image = FileField('Upload Image', validators=[FileAllowed(app.config['ALLOWED_EXTENSIONS'], 'Images only!')])
     jitter_size = IntegerField('Jitter Size', default=30)
@@ -90,8 +90,8 @@ class DeepDreamParametersForm(FlaskForm):
     octave_scale = FloatField('Octave Scale', default=1.4)
     n_iterations = IntegerField('Number of Iterations', default=10)
     run_deepdream = SubmitField('Run DeepDream')
-    
-    
+
+
 # New route to render the main page
 @app.route('/reset', methods=['GET'])
 def reset():
@@ -127,20 +127,20 @@ def index():
                 image_path=file_path,
                 config_name=config_name,
                 strategy_name=strategy_name,
-                strategy_params=strategy_params, 
+                strategy_params=strategy_params,
                 jitter_size=jitter_size,
                 octave_n=octave_n,
                 octave_scale=octave_scale,
                 n_iterations=n_iterations,
             )
-            
+
     return render_template(
-        'index.html', 
-        deepdream_parameters_form=deepdream_parameters_form, 
+        'index.html',
+        deepdream_parameters_form=deepdream_parameters_form,
         images=images,
         )
-    
-    
+
+
 @app.route('/strategy_params/<model>/<strategy>')
 def strategy_params(model, strategy):
     params = get_strategy_params(model, strategy)

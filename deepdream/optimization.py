@@ -15,7 +15,7 @@ def prepare_input_image(input_image: np.ndarray):
 
 
 def optimize_image(
-    model: ModelWithActivations, 
+    model: ModelWithActivations,
     image: np.ndarray,
     n_iterations: int = 10,
     regularization_coeff: float = 0.1,
@@ -30,7 +30,7 @@ def optimize_image(
         model(input_image) # just to call forward and calculate activations
         activations = model.activations
         losses = [torch.linalg.vector_norm(activation, ord=2) for activation in activations]
-        loss = -torch.mean(torch.stack(losses)) 
+        loss = -torch.mean(torch.stack(losses))
         regularization = regularization_coeff * 10000 * total_variation(input_image) / size
         print(loss, regularization)
         loss += regularization
