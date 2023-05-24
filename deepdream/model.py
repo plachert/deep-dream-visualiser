@@ -49,7 +49,7 @@ class IndexActivationFilter(ActivationFilter):
 class TargetsActivationFitler(ActivationFilter):
     """Preserve neurons associated with given classes."""
     def __init__(self, indices: List[int]) -> None:
-        self.indices = indices
+        self.indices = list(map(int, indices))
     
     def filter_activations(self, activations: List[Tuple[str, torch.Tensor]]) -> List[Tuple[str, torch.Tensor]]:
         last_activation = activations[-1][1] # last layer

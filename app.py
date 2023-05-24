@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response
 from typing import List, Optional
 from flask_wtf import FlaskForm 
 from wtforms.validators import DataRequired
@@ -11,6 +11,21 @@ from deepdream.image_processing import load_image_from, create_random_image, cha
 import pathlib
 from werkzeug.utils import secure_filename
 import numpy as np
+import cv2
+import threading
+import base64
+
+
+def convert_to_base64(image):
+    # Convert the image to JPEG format
+    _, jpeg_image = cv2.imencode('.jpg', image)
+
+    # Convert the JPEG image to base64-encoded string
+    base64_image = base64.b64encode(jpeg_image.tobytes()).decode('utf-8')
+
+    return base64_image
+
+images = [convert_to_base64(channel_last(create_random_image())) for _ in range(20)]
 
 
 @lru_cache
@@ -69,7 +84,7 @@ class DeepDreamParametersForm(FlaskForm):
     model = SelectField('model', choices=model_choices, validators=[DataRequired()]) 
     strategy = SelectField('strategy', choices=strategy_choices, validators=[DataRequired()]) 
     strategy_params = SelectMultipleField('strategy_params', choices=[], validators=[DataRequired()])
-    image = FileField('Upload Image', validators=[FileAllowed(app.config['ALLOWED_EXTENSIONS'], 'Images only!')])
+    uploaded_image = FileField('Upload Image', validators=[FileAllowed(app.config['ALLOWED_EXTENSIONS'], 'Images only!')])
     jitter_size = IntegerField('Jitter Size', default=30)
     octave_n = IntegerField('Octave N', default=2)
     octave_scale = FloatField('Octave Scale', default=1.4)
@@ -85,9 +100,8 @@ def reset():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global image_viewer_data
+    global images
     deepdream_parameters_form = DeepDreamParametersForm()
-    gif_url = ""
     if request.method == 'GET':
         config_name = deepdream_parameters_form.model.choices[0][0]
         strategy_name = deepdream_parameters_form.strategy.choices[0][0]
@@ -97,7 +111,7 @@ def index():
         config_name = deepdream_parameters_form.model.data
         strategy_name = deepdream_parameters_form.strategy.data
         deepdream_parameters_form.strategy_params.choices = [(param, param) for param in get_strategy_params(config_name, strategy_name)]
-        image = deepdream_parameters_form.image.data
+        image = deepdream_parameters_form.uploaded_image.data
         file_path = None
         if image is not None:
             filename = secure_filename(image.filename)
@@ -120,13 +134,10 @@ def index():
                 n_iterations=n_iterations,
             )
             
-            gif_url = create_gif(images, "static/processed.gif")
-            gif_url = gif_url.split('/')[-1]
-            
     return render_template(
         'index.html', 
         deepdream_parameters_form=deepdream_parameters_form, 
-        gif_url=gif_url,
+        images=images,
         )
     
     

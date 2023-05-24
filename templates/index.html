@@ -73,8 +73,8 @@
                     {{ deepdream_parameters_form.strategy_params }}
                 </div>
                 <div class="form-group">
-                    <label for="image">Upload Image:</label>
-                    {{ deepdream_parameters_form.image }}
+                    <label for="uploaded_image">Upload Image:</label>
+                    {{ deepdream_parameters_form.uploaded_image }}
                 </div>
                 <div class="form-group">
                     <label for="jitter_size">Jitter Size:</label>
@@ -99,9 +99,10 @@
             </form>
         </div>
 
-        <div class="image-container">
-            <img src="{{ url_for('static', filename=gif_url) }}" alt="">
+        <div id="image-container">
+            <img id="image" src="data:image/jpeg;base64,{{ images[0] }}" alt="Image">
         </div>
+
     </div>
 
     <script>
@@ -131,6 +132,20 @@
                     });
                 });
         }
+
+        
+        var imageIndex = 0;
+        var imageContainer = document.getElementById("image-container");
+        var imageElement = document.getElementById("image");
+        var images = {{ images | tojson }};
+
+        function updateImage() {
+            imageElement.src = "data:image/jpeg;base64," + images[imageIndex];
+            imageIndex = (imageIndex + 1) % images.length;
+        }
+
+        setInterval(updateImage, 1000);  // Update image every 1 second
+    
     </script>
 </body>
 </html>
