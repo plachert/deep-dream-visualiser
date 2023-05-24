@@ -42,10 +42,6 @@
                     <label for="n_iterations">Number of Iterations:</label>
                     {{ deepdream_parameters_form.n_iterations }}
                 </div>
-                <div class="button-group">
-                    {{ deepdream_parameters_form.run_deepdream }}
-                    <input type="submit" name="reset" value="Reset">
-                </div>
             </form>
         </div>
 
@@ -91,7 +87,7 @@
             imageIndex = (imageIndex + 1) % images.length;
         }
 
-        setInterval(updateImage, 1000);  // Update image every 1 second
+        setInterval(updateImage, 100);  // Update image every 1 second
 
     </script>
 </body>

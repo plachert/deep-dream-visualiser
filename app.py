@@ -7,25 +7,14 @@ from wtforms import SelectField, SubmitField, IntegerField, FloatField, SelectMu
 from deepdream.config import SUPPORTED_CONFIGS
 from deepdream.model import SUPPORTED_FILTERS, ModelWithActivations
 from functools import lru_cache
-from deepdream.image_processing import load_image_from, create_random_image, channel_last, run_pyramid
+from deepdream.image_processing import load_image_from, create_random_image, channel_last, run_pyramid, convert_to_base64
 import pathlib
 from werkzeug.utils import secure_filename
 import numpy as np
 import cv2
 import threading
-import base64
 
-
-def convert_to_base64(image):
-    # Convert the image to JPEG format
-    _, jpeg_image = cv2.imencode('.jpg', image)
-
-    # Convert the JPEG image to base64-encoded string
-    base64_image = base64.b64encode(jpeg_image.tobytes()).decode('utf-8')
-
-    return base64_image
-
-images = [convert_to_base64(channel_last(create_random_image())) for _ in range(20)]
+images = []
 
 
 @lru_cache
@@ -65,7 +54,8 @@ def run_deepdream(
         octave_scale,
         n_iterations,
         )
-    images = [channel_last(deprocessor(image)).astype(np.uint8) for image in images]
+    images = [convert_to_base64(255*channel_last(deprocessor(image))) for image in images]
+    print(len(images))
     return images
 
 
@@ -90,12 +80,6 @@ class DeepDreamParametersForm(FlaskForm):
     octave_scale = FloatField('Octave Scale', default=1.4)
     n_iterations = IntegerField('Number of Iterations', default=10)
     run_deepdream = SubmitField('Run DeepDream')
-
-
-# New route to render the main page
-@app.route('/reset', methods=['GET'])
-def reset():
-    return redirect(url_for('index'))
 
 
 @app.route('/', methods=['GET', 'POST'])
