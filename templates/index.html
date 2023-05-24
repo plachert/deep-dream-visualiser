@@ -2,28 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Document</title>
+    <title>DeepDream Parameters</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <form method="POST">
-    {{ deepdream_parameters_form.csrf_token }}
-    {{ deepdream_parameters_form.model }}
-    {{ deepdream_parameters_form.strategy }}
-    {{ deepdream_parameters_form.strategy_params }}
-    <input type="submit">
-    </form>
+    <div class="container">
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                {{ deepdream_parameters_form.csrf_token }}
+                <div class="form-group">
+                    <label for="model">Model:</label>
+                    {{ deepdream_parameters_form.model }}
+                </div>
+                <div class="form-group">
+                    <label for="strategy">Strategy:</label>
+                    {{ deepdream_parameters_form.strategy }}
+                </div>
+                <div class="form-group">
+                    <label for="strategy_params">Strategy Parameters:</label>
+                    {{ deepdream_parameters_form.strategy_params }}
+                </div>
+                <div class="form-group">
+                    <label for="uploaded_image">Upload Image:</label>
+                    {{ deepdream_parameters_form.uploaded_image }}
+                </div>
+                <div class="form-group">
+                    <label for="jitter_size">Jitter Size:</label>
+                    {{ deepdream_parameters_form.jitter_size }}
+                </div>
+                <div class="form-group">
+                    <label for="octave_n">Octave N:</label>
+                    {{ deepdream_parameters_form.octave_n }}
+                </div>
+                <div class="form-group">
+                    <label for="octave_scale">Octave Scale:</label>
+                    {{ deepdream_parameters_form.octave_scale }}
+                </div>
+                <div class="form-group">
+                    <label for="n_iterations">Number of Iterations:</label>
+                    {{ deepdream_parameters_form.n_iterations }}
+                </div>
+                <div class="form-group">
+                    <label for="regularization_coeff">Regularization:</label>
+                    {{ deepdream_parameters_form.regularization_coeff }}
+                </div>
+                <div class="form-group">
+                    <label for="lr">Learning Rate:</label>
+                    {{ deepdream_parameters_form.lr }}
+                </div>
+                <div class="button-group">
+                    {{ deepdream_parameters_form.run_deepdream }}
+                </div>
+            </form>
+        </div>
 
-    <form method="POST">
-    <input type="submit" value="NEXT" name="next"/>
-    <input type="submit" value="PREVIOUS" name="previous"/>
-    </form>
-
-    <!-- Display the current image -->
-    <div class="image-container">
-        <img src="data:image/png;base64,{{ current_image }}" alt="Current Image">
+        <div id="image-container">
+            <img id="image" src="data:image/jpeg;base64,{{ images[0] }}" alt="Image">
+        </div>
     </div>
-
-
     <script>
         var model_select = document.getElementById("model");
         var strategy_select = document.getElementById("strategy");
@@ -41,17 +77,30 @@
             var strategy = strategy_select.value;
 
             fetch('/strategy_params/' + model + "/" + strategy)
-        .then(function(response) {
-            response.json().then(function(data) {
-                var optionHTML = '';
-                for (var param of data.strategy_params) {
-                    optionHTML += '<option value="' + param + '">' + param + '</option>';
-                }
-                strategy_params_select.innerHTML = optionHTML;
-            });
-        });
+                .then(function(response) {
+                    response.json().then(function(data) {
+                        var optionHTML = '';
+                        for (var param of data.strategy_params) {
+                            optionHTML += '<option value="' + param + '">' + param + '</option>';
+                        }
+                        strategy_params_select.innerHTML = optionHTML;
+                    });
+                });
         }
-        
+
+        var imageIndex = 0;
+        var imageContainer = document.getElementById("image-container");
+        var imageElement = document.getElementById("image");
+        var images = {{ images | tojson }};
+
+        function updateImage() {
+            imageElement.src = "data:image/jpeg;base64," + images[imageIndex];
+            imageIndex = (imageIndex + 1) % images.length;
+            console.log(imageIndex);
+        }
+
+        setInterval(updateImage, 1000);  // Update image every 1 second
+
     </script>
 </body>
 </html>

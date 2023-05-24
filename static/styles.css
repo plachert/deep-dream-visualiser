@@ -1,0 +1,45 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  display: flex;
+  align-items: flex-start;
+}
+
+.form-container {
+  width: 50%;
+  margin-right: 20px;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  display: inline-block;
+  width: 150px;
+}
+
+.form-group select,
+.form-group input[type="file"] {
+  width: 200px;
+  padding: 5px;
+}
+
+.button-group {
+  margin-top: 10px;
+}
+
+.button-group button {
+  margin-right: 10px;
+}
+
+#image-container {
+  width: 50%;
+}
+
+#image-container img {
+  max-width: 100%;
+  height: auto;
+}
