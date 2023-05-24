@@ -15,7 +15,6 @@ import cv2
 import threading
 
 images = []
-images = [convert_to_base64(create_random_image()) for _ in range(10)]
 
 
 @lru_cache
