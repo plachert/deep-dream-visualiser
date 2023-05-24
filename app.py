@@ -7,7 +7,7 @@ from wtforms import SelectField, SubmitField, IntegerField, FloatField, SelectMu
 from deepdream.config import SUPPORTED_CONFIGS
 from deepdream.model import SUPPORTED_FILTERS, ModelWithActivations
 from functools import lru_cache
-from deepdream.image_processing import load_image_from, create_random_image, channel_last, create_gif, run_pyramid
+from deepdream.image_processing import load_image_from, create_random_image, channel_last, run_pyramid
 import pathlib
 from werkzeug.utils import secure_filename
 import numpy as np

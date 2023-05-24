@@ -3,57 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>DeepDream Parameters</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .form-container {
-            width: 50%;
-            margin-right: 20px;
-        }
-
-        form {
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 10px;
-        }
-
-        .form-group label {
-            display: inline-block;
-            width: 150px;
-        }
-
-        .form-group select,
-        .form-group input[type="file"] {
-            width: 200px;
-            padding: 5px;
-        }
-
-        .button-group {
-            margin-top: 10px;
-        }
-
-        .button-group button {
-            margin-right: 10px;
-        }
-
-        .image-container {
-            width: 50%;
-        }
-
-        .image-container img {
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
@@ -102,9 +52,7 @@
         <div id="image-container">
             <img id="image" src="data:image/jpeg;base64,{{ images[0] }}" alt="Image">
         </div>
-
     </div>
-
     <script>
         var model_select = document.getElementById("model");
         var strategy_select = document.getElementById("strategy");
@@ -132,7 +80,6 @@
                     });
                 });
         }
-
 
         var imageIndex = 0;
         var imageContainer = document.getElementById("image-container");
