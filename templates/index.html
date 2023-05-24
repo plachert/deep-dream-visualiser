@@ -42,6 +42,14 @@
                     <label for="n_iterations">Number of Iterations:</label>
                     {{ deepdream_parameters_form.n_iterations }}
                 </div>
+                <div class="form-group">
+                    <label for="regularization_coeff">Regularization:</label>
+                    {{ deepdream_parameters_form.regularization_coeff }}
+                </div>
+                <div class="form-group">
+                    <label for="lr">Learning Rate:</label>
+                    {{ deepdream_parameters_form.lr }}
+                </div>
                 <div class="button-group">
                     {{ deepdream_parameters_form.run_deepdream }}
                 </div>
@@ -88,9 +96,10 @@
         function updateImage() {
             imageElement.src = "data:image/jpeg;base64," + images[imageIndex];
             imageIndex = (imageIndex + 1) % images.length;
+            console.log(imageIndex);
         }
 
-        setInterval(updateImage, 100);  // Update image every 1 second
+        setInterval(updateImage, 1000);  // Update image every 1 second
 
     </script>
 </body>

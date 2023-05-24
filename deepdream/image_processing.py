@@ -82,6 +82,8 @@ def run_pyramid(
     octave_n: int = 2,
     octave_scale: float = 1.4,
     n_iterations: int = 10,
+    lr: float = 0.1,
+    regularization_coeff: float = 0.1,
     ):
     images_collection = [image]
     reversed_pyramid = create_reversed_octave_pyramid(image, octave_n=octave_n, octave_scale=octave_scale)
@@ -92,7 +94,13 @@ def run_pyramid(
         image = octave_base + detail
         jitter_x, jitter_y, unjitter_x, unjitter_y = create_jitter_parameters(jitter_size)
         image = apply_shift(image, jitter_x, jitter_y)
-        processed_images = optimize_image(model, image, n_iterations)
+        processed_images = optimize_image(
+            model=model,
+            image=image,
+            n_iterations=n_iterations,
+            lr=lr,
+            regularization_coeff=regularization_coeff,
+            )
         processed_images = [apply_shift(image, unjitter_x, unjitter_y) for image in processed_images]
         images_collection.extend(processed_images)
         image = processed_images[-1]

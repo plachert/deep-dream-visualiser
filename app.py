@@ -15,6 +15,7 @@ import cv2
 import threading
 
 images = []
+images = [convert_to_base64(create_random_image()) for _ in range(10)]
 
 
 @lru_cache
@@ -34,6 +35,8 @@ def run_deepdream(
     octave_n: int,
     octave_scale: float,
     n_iterations: int,
+    lr: float,
+    regularization_coeff: float,
 ):
     filter_activation = SUPPORTED_FILTERS[strategy_name](strategy_params)
     config = SUPPORTED_CONFIGS[config_name]
@@ -47,15 +50,16 @@ def run_deepdream(
         input_image = load_image_from(image_path)
     input_image = processor(input_image)
     images = run_pyramid(
-        model_with_activations,
-        input_image,
-        jitter_size,
-        octave_n,
-        octave_scale,
-        n_iterations,
+        model=model_with_activations,
+        image=input_image,
+        jitter_size=jitter_size,
+        octave_n=octave_n,
+        octave_scale=octave_scale,
+        n_iterations=n_iterations,
+        regularization_coeff=regularization_coeff,
+        lr=lr,
         )
     images = [convert_to_base64(deprocessor(image)) for image in images]
-    print(len(images))
     return images
 
 
@@ -65,7 +69,7 @@ available_strategies = list(SUPPORTED_FILTERS.keys())
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
 app.config['UPLOAD_FOLDER'] = 'examples/uploaded'
-app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png'}
+app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg'}
 
 
 class DeepDreamParametersForm(FlaskForm):
@@ -79,6 +83,8 @@ class DeepDreamParametersForm(FlaskForm):
     octave_n = IntegerField('Octave N', default=2)
     octave_scale = FloatField('Octave Scale', default=1.4)
     n_iterations = IntegerField('Number of Iterations', default=10)
+    regularization_coeff = FloatField('Regularization coeff', default=0.1)
+    lr = FloatField('Learning Rate', default=0.1)
     run_deepdream = SubmitField('Run DeepDream')
 
 
@@ -107,6 +113,8 @@ def index():
             octave_n = deepdream_parameters_form.octave_n.data
             octave_scale = deepdream_parameters_form.octave_scale.data
             n_iterations = deepdream_parameters_form.n_iterations.data
+            regularization_coeff = deepdream_parameters_form.regularization_coeff.data
+            lr = deepdream_parameters_form.lr.data
             images = run_deepdream(
                 image_path=file_path,
                 config_name=config_name,
@@ -116,6 +124,8 @@ def index():
                 octave_n=octave_n,
                 octave_scale=octave_scale,
                 n_iterations=n_iterations,
+                regularization_coeff=regularization_coeff,
+                lr=lr,
             )
 
     return render_template(
