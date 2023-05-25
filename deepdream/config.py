@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import Callable
-from typing import Dict
 
 import numpy as np
+import torch
 import torch.nn as nn
 from torchvision import models
 
@@ -27,6 +27,10 @@ class Config:
 
     @property
     def deprocessor(self) -> Callable:
+        raise NotImplementedError
+
+    @property
+    def example_input(self) -> torch.Tensor:
         raise NotImplementedError
 
     @property
@@ -54,37 +58,8 @@ class VGG16ImageNet(Config):
         return lambda img: (img * self.RGB_STD) + self.RGB_MEAN
 
     @property
-    def class2idx(self) -> dict[str, int]:
-        """Based on https://deeplearning.cms.waikato.ac.nz/user-guide/class-maps/IMAGENET/"""
-        mapper = {
-            'Goldfish': 1,
-            'Hammerhead shark': 4,
-            'Scorpion': 71,
-            'Centipide': 79,
-            'Jellyfish': 107,
-            'Labrador retriever': 208,
-        }
-        return mapper
-
-
-@register_config
-class AnotherConfigTest(Config):
-
-    RGB_MEAN = np.expand_dims(np.array([0.485, 0.456, 0.406]), axis=(-2, -1))
-    RGB_STD = np.expand_dims(np.array([0.229, 0.224, 0.225]), axis=(-2, -1))
-
-    @property
-    def classifier(self):
-        model = models.vgg16(weights='VGG16_Weights.IMAGENET1K_V1')
-        return model
-
-    @property
-    def processor(self):
-        return lambda img: (img - self.RGB_MEAN) / self.RGB_STD
-
-    @property
-    def deprocessor(self):
-        return lambda img: (img * self.RGB_STD) + self.RGB_MEAN
+    def example_input(self) -> torch.Tensor:
+        return torch.rand(1, 3, 224, 224)
 
     @property
     def class2idx(self) -> dict[str, int]:

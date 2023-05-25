@@ -31,10 +31,18 @@ images = []
 
 @lru_cache
 def get_strategy_params(config_name, strategy_name):
-    model = SUPPORTED_CONFIGS[config_name].classifier
-    activation_filter = SUPPORTED_FILTERS[strategy_name]([])
-    model_with_activations = ModelWithActivations(model, activation_filter)
-    return model_with_activations.strategy_parameters
+    config = SUPPORTED_CONFIGS[config_name]
+    model = config.classifier
+    example_input = config.example_input
+    activation_filter_class = SUPPORTED_FILTERS[strategy_name]
+    model_with_activations = ModelWithActivations(
+        model=model, example_input=example_input,
+    )
+    activations = model_with_activations.activations
+    parameters = activation_filter_class.list_all_available_parameters(
+        activations,
+    )
+    return parameters
 
 
 def run_deepdream(
@@ -49,13 +57,13 @@ def run_deepdream(
     lr: float,
     regularization_coeff: float,
 ):
-    filter_activation = SUPPORTED_FILTERS[strategy_name](strategy_params)
+    activation_filter = SUPPORTED_FILTERS[strategy_name](strategy_params)
     config = SUPPORTED_CONFIGS[config_name]
     classifier = config.classifier
     processor = config.processor
     deprocessor = config.deprocessor
     model_with_activations = ModelWithActivations(
-        classifier, filter_activation,
+        model=classifier, activation_filter=activation_filter,
     )
     if image_path is None:
         input_image = create_random_image()
