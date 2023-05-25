@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import base64
 import pathlib
-from typing import List
 
 import cv2
 import numpy as np
@@ -15,12 +14,18 @@ from deepdream.optimization import optimize_image
 
 def convert_to_base64(image):
     # input - channel-first 0-1 scale
-    image = 255 * channel_last(image)
-    image = image.astype(np.uint8)
+    image = convert_to_255scale(image)
+    image = channel_last(image)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, jpeg_image = cv2.imencode('.jpg', image)
     base64_image = base64.b64encode(jpeg_image.tobytes()).decode('utf-8')
     return base64_image
+
+
+def convert_to_255scale(image):
+    clipped = np.clip(image, 0., 1.)
+    image_255 = 255 * clipped
+    return image_255.astype(np.uint8)
 
 
 def channel_last(image):
@@ -40,7 +45,7 @@ def img2base64(image):
 
 
 def load_image_from(path: pathlib.Path):
-    """Load an image as a np.ndarray (3, w, h)"""
+    """Load an image as a np.ndarray (3, h, w)"""
     image = np.array(Image.open(path)).astype(np.float32)
     image /= 255.
     return channel_first(image)

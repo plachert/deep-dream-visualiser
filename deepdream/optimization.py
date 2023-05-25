@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from typing import List
-from typing import Optional
-
 import numpy as np
 import torch
 from torchmetrics.functional import total_variation
@@ -33,7 +30,7 @@ def optimize_image(
     for _ in tqdm(range(n_iterations)):
         optimizer.zero_grad()
         model(input_image)  # just to call forward and calculate activations
-        activations = model.activations
+        activations = model.activations_values
         losses = [
             torch.linalg.vector_norm(
                 activation, ord=2,
