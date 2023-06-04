@@ -1,27 +1,32 @@
 from __future__ import annotations
 
+import time
+
 import streamlit as st
 
 from app import get_strategy_params
 from app import run_deepdream
 from deepdream.config import SUPPORTED_CONFIGS
+from deepdream.image_processing import channel_last
+from deepdream.image_processing import convert_to_255scale
 from deepdream.model import SUPPORTED_FILTERS
 
 
 def run():
-    images = run_deepdream(
-        image_path=None,
-        config_name=model_selection,
-        strategy_name=strategy_selection,
-        strategy_params=strategy_params,
-        jitter_size=jitter_size,
-        octave_n=octave_n,
-        octave_scale=octave_scale,
-        n_iterations=n_iterations,
-        regularization_coeff=regularization_coeff,
-        lr=lr,
-    )
-    st.session_state['images'] = images
+    with st.spinner('Processing...'):
+        images = run_deepdream(
+            image_path=image_path,
+            config_name=model_selection,
+            strategy_name=strategy_selection,
+            strategy_params=strategy_params,
+            jitter_size=jitter_size,
+            octave_n=octave_n,
+            octave_scale=octave_scale,
+            n_iterations=n_iterations,
+            regularization_coeff=regularization_coeff,
+            lr=lr,
+        )
+        st.session_state['images'] = images
 
 
 if __name__ == '__main__':
@@ -65,16 +70,34 @@ if __name__ == '__main__':
         )
         lr = st.number_input('Learning Rate', 0.001, 1., 0.01, 0.001)
 
-# placeholder = st.empty()
-# while True:
-#     for i, image in enumerate(images):
-#         print(image.shape)
-#         placeholder.image(
-#             channel_last(
-#                 convert_to_255scale(image),
-#             ), f'iter {i}',
-#         )
-#         time.sleep(1)
+    with image_table:
+        uploaded_file = st.file_uploader(
+            'Upload an image', type=['jpg', 'png'])
+        if uploaded_file is not None:
+            with open(f'examples/uploaded/{uploaded_file.name}', 'wb') as f:
+                f.write(uploaded_file.read())
+            image_path = f'examples/uploaded/{uploaded_file.name}'
+        else:
+            image_path = None
+
+    placeholder = st.empty()
+    images = st.session_state.get('images')
+    if images:
+        placeholder.image(
+            channel_last(
+                convert_to_255scale(images[-1]),
+            ), f'Processed Image',
+        )
+    # print(len(images))
+    # if images:
+    #     while True:
+    #         for i, image in enumerate(images):
+    #             placeholder.image(
+    #                 channel_last(
+    #                     convert_to_255scale(image),
+    #                 ), f'iter {i}',
+    #             )
+    #             time.sleep(1)
 
 # from PIL import Image
 # import numpy as np
