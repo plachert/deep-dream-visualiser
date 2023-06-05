@@ -29,7 +29,7 @@ def optimize_image(
     for _ in tqdm(range(n_iterations)):
         optimizer.zero_grad()
         model(input_image)  # just to call forward and calculate activations
-        activations = model.activations_values["filtered"]
+        activations = model.activations_values['filtered']
         losses = [
             torch.linalg.vector_norm(
                 activation, ord=2,
@@ -38,7 +38,6 @@ def optimize_image(
         loss = -torch.mean(torch.stack(losses))
         regularization = regularization_coeff * \
             10000 * total_variation(input_image) / size
-        print(loss, regularization)
         loss += regularization
         loss.backward()
         optimizer.step()

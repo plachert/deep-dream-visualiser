@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+import pathlib
+
 import streamlit as st
 from activation_tracker.activation import SUPPORTED_FILTERS
 from activation_tracker.model import ModelWithActivations
-import pathlib
 
 from deepdream.config import SUPPORTED_CONFIGS
 from deepdream.image_processing import channel_last
 from deepdream.image_processing import convert_to_255scale
-from deepdream.image_processing import run_pyramid
 from deepdream.image_processing import create_random_image
 from deepdream.image_processing import load_image_from
+from deepdream.image_processing import run_pyramid
 
 
 def run():
@@ -28,6 +29,18 @@ def run():
             lr=lr,
         )
         st.session_state['images'] = images
+        st.session_state['last_run_params'] = {
+            'Image path': image_path,
+            'Model': model_selection,
+            'Strategy': strategy_selection,
+            'Strategy params': strategy_params,
+            'Jitter size': jitter_size,
+            'Pyramid levels': octave_n,
+            'Octave scale': octave_scale,
+            'Number of iterations': n_iterations,
+            'Regularization coeff': regularization_coeff,
+            'Learning rate': lr,
+        }
 
 
 @st.cache_data
@@ -39,7 +52,7 @@ def get_strategy_params(config_name, strategy_name):
     model_with_activations = ModelWithActivations(
         model=model, example_input=example_input,
     )
-    activations = model_with_activations.activations["all"]
+    activations = model_with_activations.activations['all']
     parameters = activation_filter_class.list_all_available_parameters(
         activations,
     )
@@ -64,7 +77,7 @@ def run_deepdream(
     processor = config.processor
     deprocessor = config.deprocessor
     model_with_activations = ModelWithActivations(
-        model=classifier, activation_filters={"filtered": [activation_filter]},
+        model=classifier, activation_filters={'filtered': [activation_filter]},
     )
     if image_path is None:
         input_image = create_random_image()
@@ -81,7 +94,8 @@ def run_deepdream(
         regularization_coeff=regularization_coeff,
         lr=lr,
     )
-    images = [deprocessor(image) for image in images]#[convert_to_base64(deprocessor(image)) for image in images]
+    # [convert_to_base64(deprocessor(image)) for image in images]
+    images = [deprocessor(image) for image in images]
     return images
 
 
@@ -93,7 +107,7 @@ if __name__ == '__main__':
         page_icon=None,
     )
 
-    st.sidebar.title('DeepDream Visualiser')
+    st.sidebar.title('Configuration')
     is_disabled = not st.session_state.get('strategy_params', [])
     st.sidebar.button('Run DeepDream', on_click=run, disabled=is_disabled)
 
@@ -117,14 +131,14 @@ if __name__ == '__main__':
         )
 
     with deepdream_table:
-        jitter_size = st.number_input('Jitter Size', 0, 60, 30, 1)
+        jitter_size = st.number_input('Jitter size', 0, 60, 30, 1)
         octave_n = st.number_input('Pyramid levels', 0, 10, 3, 1)
         octave_scale = st.number_input('Octave scale', 1., 2., 1.4, 1.)
         n_iterations = st.number_input('Iterations per level', 1, 300, 10, 1)
         regularization_coeff = st.number_input(
             'Regularization coeff', 0., 1., 0.1, 0.05,
         )
-        lr = st.number_input('Learning Rate', 0.001, 1., 0.01, 0.001)
+        lr = st.number_input('Learning rate', 0.001, 1., 0.01, 0.001)
 
     with image_table:
         uploaded_file = st.file_uploader(
@@ -137,11 +151,18 @@ if __name__ == '__main__':
         else:
             image_path = None
 
-    placeholder = st.empty()
     images = st.session_state.get('images')
+    last_run_params = st.session_state.get('last_run_params')
+
     if images:
-        placeholder.image(
+        st.image(
             channel_last(
                 convert_to_255scale(images[-1]),
             ), 'Processed Image',
         )
+        with st.expander('Parameters'):
+            params_str = {
+                param: str(value)
+                for param, value in last_run_params.items()
+            }
+            st.table(params_str)
