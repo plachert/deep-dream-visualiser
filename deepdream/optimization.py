@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 import torch
+from activation_tracker.model import ModelWithActivations
 from torchmetrics.functional import total_variation
 from tqdm import tqdm
-
-from activation_tracker.model import ModelWithActivations
 
 
 def prepare_input_image(input_image: np.ndarray):
