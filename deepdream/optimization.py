@@ -29,7 +29,7 @@ def optimize_image(
     for _ in tqdm(range(n_iterations)):
         optimizer.zero_grad()
         model(input_image)  # just to call forward and calculate activations
-        activations = model.activations_values
+        activations = model.activations_values["filtered"]
         losses = [
             torch.linalg.vector_norm(
                 activation, ord=2,

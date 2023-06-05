@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import streamlit as st
 from activation_tracker.activation import SUPPORTED_FILTERS
+from activation_tracker.model import ModelWithActivations
+import pathlib
 
-from app import get_strategy_params
-from app import run_deepdream
 from deepdream.config import SUPPORTED_CONFIGS
 from deepdream.image_processing import channel_last
 from deepdream.image_processing import convert_to_255scale
+from deepdream.image_processing import run_pyramid
+from deepdream.image_processing import create_random_image
+from deepdream.image_processing import load_image_from
 
 
 def run():
@@ -25,6 +28,61 @@ def run():
             lr=lr,
         )
         st.session_state['images'] = images
+
+
+@st.cache_data
+def get_strategy_params(config_name, strategy_name):
+    config = SUPPORTED_CONFIGS[config_name]
+    model = config.classifier
+    example_input = config.example_input
+    activation_filter_class = SUPPORTED_FILTERS[strategy_name]
+    model_with_activations = ModelWithActivations(
+        model=model, example_input=example_input,
+    )
+    activations = model_with_activations.activations["all"]
+    parameters = activation_filter_class.list_all_available_parameters(
+        activations,
+    )
+    return parameters
+
+
+def run_deepdream(
+    image_path: pathlib.Path | None,
+    config_name: str,
+    strategy_name: str,
+    strategy_params: list,
+    jitter_size: int,
+    octave_n: int,
+    octave_scale: float,
+    n_iterations: int,
+    lr: float,
+    regularization_coeff: float,
+):
+    activation_filter = SUPPORTED_FILTERS[strategy_name](strategy_params)
+    config = SUPPORTED_CONFIGS[config_name]
+    classifier = config.classifier
+    processor = config.processor
+    deprocessor = config.deprocessor
+    model_with_activations = ModelWithActivations(
+        model=classifier, activation_filters={"filtered": [activation_filter]},
+    )
+    if image_path is None:
+        input_image = create_random_image()
+    else:
+        input_image = load_image_from(image_path)
+    input_image = processor(input_image)
+    images = run_pyramid(
+        model=model_with_activations,
+        image=input_image,
+        jitter_size=jitter_size,
+        octave_n=octave_n,
+        octave_scale=octave_scale,
+        n_iterations=n_iterations,
+        regularization_coeff=regularization_coeff,
+        lr=lr,
+    )
+    images = [deprocessor(image) for image in images]#[convert_to_base64(deprocessor(image)) for image in images]
+    return images
 
 
 if __name__ == '__main__':
@@ -87,29 +145,3 @@ if __name__ == '__main__':
                 convert_to_255scale(images[-1]),
             ), 'Processed Image',
         )
-    # print(len(images))
-    # if images:
-    #     while True:
-    #         for i, image in enumerate(images):
-    #             placeholder.image(
-    #                 channel_last(
-    #                     convert_to_255scale(image),
-    #                 ), f'iter {i}',
-    #             )
-    #             time.sleep(1)
-
-# from PIL import Image
-# import numpy as np
-# import time
-
-# dog = Image.open("examples/dog.jpg")
-# sky = Image.open("examples/sky.jpg")
-
-# placeholder = st.empty()
-
-# images = 10*[dog, sky]
-
-# while True:
-#     for i, image in enumerate(images):
-#         placeholder.image(image, f"iter {i}")
-#         time.sleep(1)
