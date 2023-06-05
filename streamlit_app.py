@@ -94,7 +94,10 @@ def run_deepdream(
         regularization_coeff=regularization_coeff,
         lr=lr,
     )
-    images = [channel_last(convert_to_255scale(deprocessor(image))) for image in images]
+    images = [
+        channel_last(convert_to_255scale(deprocessor(image)))
+        for image in images
+    ]
     return images
 
 
@@ -157,12 +160,15 @@ if __name__ == '__main__':
         l_margin, image_col, r_margin = st.columns([1, 3, 1])
         n_images = len(images)
         with l_margin:
-            st.write("")
+            st.write('')
         with image_col:
-            img_slider = st.slider("Image slider", 1, n_images, n_images)
-            st.image(images[img_slider-1], 'Processed Image', width=600, use_column_width=True)
+            img_slider = st.slider('Image slider', 1, n_images, n_images)
+            st.image(
+                images[img_slider-1], 'Processed Image',
+                width=600, use_column_width=True,
+            )
         with r_margin:
-            st.write("")
+            st.write('')
         with st.expander('Parameters'):
             params_str = {
                 param: str(value)

@@ -33,10 +33,6 @@ class Config:
     def example_input(self) -> torch.Tensor:
         raise NotImplementedError
 
-    @property
-    def class2idx(self) -> dict[str, int]:
-        raise NotImplementedError
-
 
 @register_config
 class VGG16ImageNet(Config):
@@ -60,16 +56,3 @@ class VGG16ImageNet(Config):
     @property
     def example_input(self) -> torch.Tensor:
         return torch.rand(1, 3, 224, 224)
-
-    @property
-    def class2idx(self) -> dict[str, int]:
-        """Based on https://deeplearning.cms.waikato.ac.nz/user-guide/class-maps/IMAGENET/"""
-        mapper = {
-            'Goldfish': 1,
-            'Hammerhead shark': 4,
-            'Scorpion': 71,
-            'Centipide': 79,
-            'Jellyfish': 107,
-            'Labrador retriever': 208,
-        }
-        return mapper
