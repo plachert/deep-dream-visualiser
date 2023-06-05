@@ -8,7 +8,7 @@ import numpy as np
 import scipy.ndimage as nd
 from PIL import Image
 
-from deepdream.model import ModelWithActivations
+from activation_tracker.model import ModelWithActivations
 from deepdream.optimization import optimize_image
 
 

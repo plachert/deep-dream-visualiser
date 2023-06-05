@@ -5,7 +5,7 @@ import torch
 from torchmetrics.functional import total_variation
 from tqdm import tqdm
 
-from deepdream.model import ModelWithActivations
+from activation_tracker.model import ModelWithActivations
 
 
 def prepare_input_image(input_image: np.ndarray):

@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-import time
-
 import streamlit as st
+from activation_tracker.activation import SUPPORTED_FILTERS
 
 from app import get_strategy_params
 from app import run_deepdream
 from deepdream.config import SUPPORTED_CONFIGS
 from deepdream.image_processing import channel_last
 from deepdream.image_processing import convert_to_255scale
-from deepdream.model import SUPPORTED_FILTERS
 
 
 def run():
@@ -37,7 +35,7 @@ if __name__ == '__main__':
         page_icon=None,
     )
 
-    st.sidebar.title('Deep Dream Visualiser')
+    st.sidebar.title('DeepDream Visualiser')
     is_disabled = not st.session_state.get('strategy_params', [])
     st.sidebar.button('Run DeepDream', on_click=run, disabled=is_disabled)
 
@@ -72,7 +70,8 @@ if __name__ == '__main__':
 
     with image_table:
         uploaded_file = st.file_uploader(
-            'Upload an image', type=['jpg', 'png'])
+            'Upload an image', type=['jpg', 'png'],
+        )
         if uploaded_file is not None:
             with open(f'examples/uploaded/{uploaded_file.name}', 'wb') as f:
                 f.write(uploaded_file.read())
@@ -86,7 +85,7 @@ if __name__ == '__main__':
         placeholder.image(
             channel_last(
                 convert_to_255scale(images[-1]),
-            ), f'Processed Image',
+            ), 'Processed Image',
         )
     # print(len(images))
     # if images:
