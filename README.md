@@ -9,9 +9,15 @@
 
 
 ### Demo
-1. Visualise features associated with a given target class.
+1. Visualise features associated with a given target class. In the following example we select `TargetsActivationFilter` as a strategy and `71` as a parameter. This way the optimization algorithm will try to maximize the 71st neuron of the last layer which is associated with scorpion class. We can run the algorithm with default parameters. As we want to start with a random image we don't upload any image (`Image params`)
 
 ![](https://github.com/plachert/deep-dream-experiments/blob/streamlit/examples/show_scorpion.gif)
+
+When the image is processed we can see the results. We can examine the transformation process by playing with the slider. As you can see the features that the model found to be useful for recognizing a scorpion in the image make sense. The model seems to have captured the specific features of a scorpion - body segments and twisted legs.
+
+2. We can also run the algorithm on a given input image in order to amplify features. In the following example we amplify all the ReLU activations in the model.
+
+![](https://github.com/plachert/deep-dream-experiments/blob/streamlit/examples/show_sky.gif)
 
 ## Licence
 

@@ -136,11 +136,11 @@ if __name__ == '__main__':
         jitter_size = st.number_input('Jitter size', 0, 60, 30, 1)
         octave_n = st.number_input('Pyramid levels', 1, 10, 3, 1)
         octave_scale = st.number_input('Octave scale', 1., 2., 1.4, 0.1)
-        n_iterations = st.number_input('Iterations per level', 1, 300, 10, 1)
+        n_iterations = st.number_input('Iterations per level', 1, 300, 20, 1)
         regularization_coeff = st.number_input(
             'Regularization coeff', 0., 1., 0.1, 0.05,
         )
-        lr = st.number_input('Learning rate', 0.001, 1., 0.1, 0.01)
+        lr = st.number_input('Learning rate', 0.001, 1., 0.5, 0.01)
 
     with image_table:
         uploaded_file = st.file_uploader(
