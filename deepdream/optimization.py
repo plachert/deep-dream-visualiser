@@ -42,5 +42,6 @@ def optimize_image(
         loss.backward()
         optimizer.step()
         # for vis
-        processed_images.append(input_image.detach().numpy().squeeze())
+        img = np.copy(input_image.detach().numpy().squeeze())
+        processed_images.append(img)
     return processed_images

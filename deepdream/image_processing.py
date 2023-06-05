@@ -12,16 +12,6 @@ from PIL import Image
 from deepdream.optimization import optimize_image
 
 
-def convert_to_base64(image):
-    # input - channel-first 0-1 scale
-    image = convert_to_255scale(image)
-    image = channel_last(image)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    _, jpeg_image = cv2.imencode('.jpg', image)
-    base64_image = base64.b64encode(jpeg_image.tobytes()).decode('utf-8')
-    return base64_image
-
-
 def convert_to_255scale(image):
     clipped = np.clip(image, 0., 1.)
     image_255 = 255 * clipped

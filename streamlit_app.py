@@ -94,8 +94,7 @@ def run_deepdream(
         regularization_coeff=regularization_coeff,
         lr=lr,
     )
-    # [convert_to_base64(deprocessor(image)) for image in images]
-    images = [deprocessor(image) for image in images]
+    images = [channel_last(convert_to_255scale(deprocessor(image))) for image in images]
     return images
 
 
@@ -132,13 +131,13 @@ if __name__ == '__main__':
 
     with deepdream_table:
         jitter_size = st.number_input('Jitter size', 0, 60, 30, 1)
-        octave_n = st.number_input('Pyramid levels', 0, 10, 3, 1)
-        octave_scale = st.number_input('Octave scale', 1., 2., 1.4, 1.)
+        octave_n = st.number_input('Pyramid levels', 1, 10, 3, 1)
+        octave_scale = st.number_input('Octave scale', 1., 2., 1.4, 0.1)
         n_iterations = st.number_input('Iterations per level', 1, 300, 10, 1)
         regularization_coeff = st.number_input(
             'Regularization coeff', 0., 1., 0.1, 0.05,
         )
-        lr = st.number_input('Learning rate', 0.001, 1., 0.01, 0.001)
+        lr = st.number_input('Learning rate', 0.001, 1., 0.1, 0.01)
 
     with image_table:
         uploaded_file = st.file_uploader(
@@ -155,11 +154,15 @@ if __name__ == '__main__':
     last_run_params = st.session_state.get('last_run_params')
 
     if images:
-        st.image(
-            channel_last(
-                convert_to_255scale(images[-1]),
-            ), 'Processed Image',
-        )
+        l_margin, image_col, r_margin = st.columns([1, 3, 1])
+        n_images = len(images)
+        with l_margin:
+            st.write("")
+        with image_col:
+            img_slider = st.slider("Image slider", 1, n_images, n_images)
+            st.image(images[img_slider-1], 'Processed Image', width=600, use_column_width=True)
+        with r_margin:
+            st.write("")
         with st.expander('Parameters'):
             params_str = {
                 param: str(value)
