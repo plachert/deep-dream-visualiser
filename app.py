@@ -19,7 +19,6 @@ from wtforms import SubmitField
 from wtforms.validators import DataRequired
 
 from deepdream.config import SUPPORTED_CONFIGS
-from deepdream.image_processing import convert_to_base64
 from deepdream.image_processing import create_random_image
 from deepdream.image_processing import load_image_from
 from deepdream.image_processing import run_pyramid
@@ -80,7 +79,8 @@ def run_deepdream(
         regularization_coeff=regularization_coeff,
         lr=lr,
     )
-    images = [convert_to_base64(deprocessor(image)) for image in images]
+    # [convert_to_base64(deprocessor(image)) for image in images]
+    images = [deprocessor(image) for image in images]
     return images
 
 
