@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DeepDream Parameters</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                {{ deepdream_parameters_form.csrf_token }}
+                <div class="form-group">
+                    <label for="model">Model:</label>
+                    {{ deepdream_parameters_form.model }}
+                </div>
+                <div class="form-group">
+                    <label for="strategy">Strategy:</label>
+                    {{ deepdream_parameters_form.strategy }}
+                </div>
+                <div class="form-group">
+                    <label for="strategy_params">Strategy Parameters:</label>
+                    {{ deepdream_parameters_form.strategy_params }}
+                </div>
+                <div class="form-group">
+                    <label for="uploaded_image">Upload Image:</label>
+                    {{ deepdream_parameters_form.uploaded_image }}
+                </div>
+                <div class="form-group">
+                    <label for="jitter_size">Jitter Size:</label>
+                    {{ deepdream_parameters_form.jitter_size }}
+                </div>
+                <div class="form-group">
+                    <label for="octave_n">Octave N:</label>
+                    {{ deepdream_parameters_form.octave_n }}
+                </div>
+                <div class="form-group">
+                    <label for="octave_scale">Octave Scale:</label>
+                    {{ deepdream_parameters_form.octave_scale }}
+                </div>
+                <div class="form-group">
+                    <label for="n_iterations">Number of Iterations:</label>
+                    {{ deepdream_parameters_form.n_iterations }}
+                </div>
+                <div class="form-group">
+                    <label for="regularization_coeff">Regularization:</label>
+                    {{ deepdream_parameters_form.regularization_coeff }}
+                </div>
+                <div class="form-group">
+                    <label for="lr">Learning Rate:</label>
+                    {{ deepdream_parameters_form.lr }}
+                </div>
+                <div class="button-group">
+                    {{ deepdream_parameters_form.run_deepdream }}
+                </div>
+            </form>
+        </div>
+
+        <div id="image-container">
+            <img id="image" src="data:image/jpeg;base64,{{ images[0] }}" alt="Image">
+            <label for="interval-input">Interval (in milliseconds):</label>
+            <input type="number" id="interval-input" min="100" step="100" value="1000">
+        </div>
+    </div>
+    <script>
+        var model_select = document.getElementById("model");
+        var strategy_select = document.getElementById("strategy");
+        var strategy_params_select = document.getElementById("strategy_params");
+
+        model_select.onchange = function() {
+            fetchData();
+        };
+        strategy_select.onchange = function() {
+            fetchData();
+        };
+
+        function fetchData() {
+            var model = model_select.value;
+            var strategy = strategy_select.value;
+
+            fetch('/strategy_params/' + model + "/" + strategy)
+                .then(function(response) {
+                    response.json().then(function(data) {
+                        var optionHTML = '';
+                        for (var param of data.strategy_params) {
+                            optionHTML += '<option value="' + param + '">' + param + '</option>';
+                        }
+                        strategy_params_select.innerHTML = optionHTML;
+                    });
+                });
+        }
+
+        var imageIndex = 0;
+        var imageContainer = document.getElementById("image-container");
+        var imageElement = document.getElementById("image");
+        var images = {{ images | tojson }};
+
+        function updateImage() {
+            imageElement.src = "data:image/jpeg;base64," + images[imageIndex];
+            imageIndex = (imageIndex + 1) % images.length;
+            console.log(imageIndex);
+        }
+
+        var intervalID;
+        var intervalInput = document.getElementById("interval-input");
+        intervalInput.onchange = function() {
+            var interval = parseInt(intervalInput.value, 10);
+            console.log(interval);
+            if (isNaN(interval) || interval < 100) {
+                interval = 1000; // Default interval if the input is invalid or too small
+            }
+            clearInterval(intervalID);
+            intervalID = setInterval(updateImage, interval);
+        };
+
+    </script>
+</body>
+</html>
