@@ -1,3 +1,4 @@
+"""This module provides the optimization algorithm for DeepDream."""
 from __future__ import annotations
 
 import numpy as np
@@ -8,6 +9,7 @@ from tqdm import tqdm
 
 
 def prepare_input_image(input_image: np.ndarray):
+    """Prepare the image to be used in optimization."""
     input_image = input_image.astype(dtype=np.float32)
     input_image = torch.from_numpy(input_image)
     input_image = torch.unsqueeze(input_image, 0)  # minibatch
@@ -21,7 +23,7 @@ def optimize_image(
     n_iterations: int = 10,
     regularization_coeff: float = 0.1,
     lr: float = 0.1,
-) -> np.ndarray:
+) -> list[np.ndarray]:
     input_image = prepare_input_image(np.copy(image))
     processed_images = []
     size = input_image.shape[-2] * input_image.shape[-1]
@@ -41,7 +43,6 @@ def optimize_image(
         loss += regularization
         loss.backward()
         optimizer.step()
-        # for vis
         img = np.copy(input_image.detach().numpy().squeeze())
         processed_images.append(img)
     return processed_images

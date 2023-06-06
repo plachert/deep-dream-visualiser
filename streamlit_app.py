@@ -1,3 +1,4 @@
+"""Streamlit app for experimenting with DeepDream algorithm."""
 from __future__ import annotations
 
 import pathlib
@@ -6,12 +7,8 @@ import streamlit as st
 from activation_tracker.activation import SUPPORTED_FILTERS
 from activation_tracker.model import ModelWithActivations
 
+import deepdream.image_processing as img_proc
 from deepdream.config import SUPPORTED_CONFIGS
-from deepdream.image_processing import channel_last
-from deepdream.image_processing import convert_to_255scale
-from deepdream.image_processing import create_random_image
-from deepdream.image_processing import load_image_from
-from deepdream.image_processing import run_pyramid
 
 
 def run():
@@ -80,11 +77,11 @@ def run_deepdream(
         model=classifier, activation_filters={'filtered': [activation_filter]},
     )
     if image_path is None:
-        input_image = create_random_image()
+        input_image = img_proc.create_random_image()
     else:
-        input_image = load_image_from(image_path)
+        input_image = img_proc.load_image_from(image_path)
     input_image = processor(input_image)
-    images = run_pyramid(
+    images = img_proc.run_pyramid(
         model=model_with_activations,
         image=input_image,
         jitter_size=jitter_size,
@@ -95,13 +92,15 @@ def run_deepdream(
         lr=lr,
     )
     images = [
-        channel_last(convert_to_255scale(deprocessor(image)))
+        img_proc.channel_last(img_proc.convert_to_255scale(deprocessor(image)))
         for image in images
     ]
     return images
 
 
 if __name__ == '__main__':
+    uploaded_path = pathlib.Path('examples/uploaded')
+    uploaded_path.mkdir(parents=True, exist_ok=True)
     st.set_page_config(
         layout='wide',
         initial_sidebar_state='auto',
@@ -147,9 +146,9 @@ if __name__ == '__main__':
             'Upload an image', type=['jpg', 'png'],
         )
         if uploaded_file is not None:
-            with open(f'examples/uploaded/{uploaded_file.name}', 'wb') as f:
+            with open(f'{uploaded_path}/{uploaded_file.name}', 'wb') as f:
                 f.write(uploaded_file.read())
-            image_path = f'examples/uploaded/{uploaded_file.name}'
+            image_path = f'{uploaded_path}/{uploaded_file.name}'
         else:
             image_path = None
 
