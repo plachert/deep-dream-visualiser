@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import base64
 import pathlib
 
-import cv2
 import numpy as np
 import scipy.ndimage as nd
 from activation_tracker.model import ModelWithActivations
@@ -26,12 +24,6 @@ def channel_last(image):
 def channel_first(image):
     transposed = np.transpose(image, (2, 0, 1))
     return transposed
-
-
-def img2base64(image):
-    _, buffer = cv2.imencode('.png', image)
-    encoded_image = base64.b64encode(buffer).decode('utf-8')
-    return encoded_image
 
 
 def load_image_from(path: pathlib.Path):
