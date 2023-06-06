@@ -39,6 +39,78 @@ The parameters are divided into three categories:
 
 * Image params - here you can upload an image that you want to process. If you leave this empty a random image will be used.
 
+## Registering new models
+If you want to use some other model you should add it to the `deepdream/config.py` following the `Config` template.
+```python
+from __future__ import annotations
+
+from typing import Callable
+
+import numpy as np
+import torch
+import torch.nn as nn
+from torchvision import models
+
+SUPPORTED_CONFIGS = {}
+
+
+def register_config(cls):
+    instance = cls()
+    SUPPORTED_CONFIGS[cls.__name__] = instance
+    return cls
+
+
+class Config:
+    @property
+    def classifier(self) -> nn.Module:
+        raise NotImplementedError
+
+    @property
+    def processor(self) -> Callable:
+        raise NotImplementedError
+
+    @property
+    def deprocessor(self) -> Callable:
+        raise NotImplementedError
+
+    @property
+    def example_input(self) -> torch.Tensor:
+        raise NotImplementedError
+
+
+@register_config
+class VGG16ImageNet(Config):
+    ...
+
+
+@register_config
+class YourModel(Config):
+
+    @property
+    def classifier(self):
+        """
+        Return torch.nn.Module. You can use torchvision or your own models.
+        """
+
+    @property
+    def processor(self):
+        """
+        Return a function that processes original image
+        """
+
+    @property
+    def deprocessor(self):
+        """
+        Return a function that inverts the processing.
+        """
+
+    @property
+    def example_input(self) -> torch.Tensor:
+        """
+        Return an example input for the classifier. It is used by Activation Tracker to inspect the layers of the model.
+        """
+```
+
 ## Demo
 ### Visualise learnt features
 When applied to a random image, the algorithm  provides insights into the learned features of the model. In the following example we select `TargetsActivationFilter` as a strategy and `71` as a parameter. This way the optimization algorithm will try to maximize the 71st neuron of the last layer which is associated with scorpion class. We can run the algorithm with default parameters.
