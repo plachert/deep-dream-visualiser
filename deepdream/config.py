@@ -1,3 +1,4 @@
+"""This module provides configs and registers them so they can be easily accessed."""
 from __future__ import annotations
 
 from typing import Callable
