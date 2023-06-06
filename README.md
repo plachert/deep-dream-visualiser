@@ -105,7 +105,7 @@ class YourModel(Config):
         """
 
     @property
-    def example_input(self) -> torch.Tensor:
+    def example_input(self):
         """
         Return an example input for the classifier.
         It is used by Activation Tracker to inspect the layers of the model.
