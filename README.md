@@ -17,8 +17,11 @@ Things I did differently:
 
 ## Getting Started
 1. `git clone https://github.com/plachert/deep-dream-visualiser.git`
+2. `pip install -r requirements.txt` (run it in your virtual env in project dir)
+3. `streamlit run streamlit_app.py`
 
-
+You should see the following screen:
+![](https://github.com/plachert/deep-dream-visualiser/blob/streamlit/examples/start_app.png)
 
 ## Demo
 ### Visualise learnt features
