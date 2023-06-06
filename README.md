@@ -1,6 +1,14 @@
 # DeepDream Visualiser
 A streamlit application for experimenting with [DeepDream algorithm](https://en.wikipedia.org/wiki/DeepDream).
 
+## Table of Contents
+* [Description](#description)
+* [Getting Started](#getting-started)
+* [Registering new models](#registering-new-models)
+* [Demo](#demo)
+    * [Visualise learnt features](#visualise-learnt-features)
+    * [Amplify features in an input image](#amplify-features-in-an-input-image)
+
 ##  Description
 Yet another DeepDream repo. I found these materials to be extremely useful:
 * [deepdream](https://github.com/google/deepdream) (original repo)
