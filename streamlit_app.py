@@ -102,6 +102,8 @@ def run_deepdream(
 
 
 if __name__ == '__main__':
+    uploaded_path = pathlib.Path('examples/uploaded')
+    uploaded_path.mkdir(parents=True, exist_ok=True)
     st.set_page_config(
         layout='wide',
         initial_sidebar_state='auto',
@@ -147,9 +149,9 @@ if __name__ == '__main__':
             'Upload an image', type=['jpg', 'png'],
         )
         if uploaded_file is not None:
-            with open(f'examples/uploaded/{uploaded_file.name}', 'wb') as f:
+            with open(f'{uploaded_path}/{uploaded_file.name}', 'wb') as f:
                 f.write(uploaded_file.read())
-            image_path = f'examples/uploaded/{uploaded_file.name}'
+            image_path = f'{uploaded_path}/{uploaded_file.name}'
         else:
             image_path = None
 
