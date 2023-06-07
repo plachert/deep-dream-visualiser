@@ -7,11 +7,18 @@ from activation_tracker.model import ModelWithActivations
 from torchmetrics.functional import total_variation
 from tqdm import tqdm
 
+if torch.cuda.is_available():
+    dev = 'cuda:0'
+else:
+    dev = 'cpu'
+device = torch.device(dev)
+
 
 def prepare_input_image(input_image: np.ndarray):
     """Prepare the image to be used in optimization."""
     input_image = input_image.astype(dtype=np.float32)
     input_image = torch.from_numpy(input_image)
+    input_image = input_image.to(device)
     input_image = torch.unsqueeze(input_image, 0)  # minibatch
     input_image.requires_grad = True
     return input_image
@@ -24,6 +31,7 @@ def optimize_image(
     regularization_coeff: float = 0.1,
     lr: float = 0.1,
 ) -> list[np.ndarray]:
+    model.to(device)
     input_image = prepare_input_image(np.copy(image))
     processed_images = []
     size = input_image.shape[-2] * input_image.shape[-1]
@@ -43,6 +51,6 @@ def optimize_image(
         loss += regularization
         loss.backward()
         optimizer.step()
-        img = np.copy(input_image.detach().numpy().squeeze())
+        img = np.copy(input_image.cpu().detach().numpy().squeeze())
         processed_images.append(img)
     return processed_images
