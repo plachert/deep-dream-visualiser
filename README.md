@@ -1,8 +1,8 @@
 # DeepDream Visualiser
 A streamlit application for experimenting with [DeepDream algorithm](https://en.wikipedia.org/wiki/DeepDream).
 
-![](https://github.com/plachert/deep-dream-visualiser/blob/main/examples/deep_dream_learnt_feats_short.gif)
-![](https://github.com/plachert/deep-dream-visualiser/blob/main/examples/deep_dream_amplify_short.gif)
+![](https://github.com/plachert/deep-dream-visualiser/blob/main/examples/deep_dream_learnt_feats_short_demo.gif)
+![](https://github.com/plachert/deep-dream-visualiser/blob/main/examples/deep_dream_amplify_short_demo.gif)
 
 ## Table of Contents
 * [Description](#description)
